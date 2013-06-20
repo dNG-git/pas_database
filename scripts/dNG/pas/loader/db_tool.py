@@ -26,6 +26,7 @@ NOTE_END //n"""
 from argparse import ArgumentParser
 
 from dNG.pas.data.settings import Settings
+from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
 from dNG.pas.loader.cli import Cli
 from dNG.pas.module.named_loader import NamedLoader
@@ -104,8 +105,8 @@ Callback for initialisation.
 		Hooks.call("dNG.pas.db.load_all")
 		Hooks.register("dNG.pas.status.stop", self.stop)
 
-		database = Instance.get_instance()
-		Instance.get_base_layout().metadata.create_all(database.get_session().get_bind())
+		database = Connection.get_instance()
+		Instance().metadata.create_all(database.get_bind())
 		database.return_instance()
 	#
 
