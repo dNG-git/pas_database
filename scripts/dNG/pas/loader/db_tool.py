@@ -107,7 +107,6 @@ Callback for initialisation.
 
 		database = Connection.get_instance()
 		Instance().metadata.create_all(database.get_bind())
-		database.return_instance()
 	#
 
 	def stop(self, params = None, last_return = None):

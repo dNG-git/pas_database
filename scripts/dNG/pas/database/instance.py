@@ -18,7 +18,7 @@ obtain one at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------------------------
 http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
-#echo(pasDbVersion)#
+#echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
 ----------------------------------------------------------------------------
 NOTE_END //n"""
@@ -65,44 +65,71 @@ happened.
 		"""
 	#
 
-	def __del__(self):
-	#
-		"""
-Destructor __del__(Instance)
-
-:since: v0.1.00
-		"""
-
-		if (self.log_handler != None): self.log_handler.return_instance()
-	#
-
 	def insert(self):
 	#
 		"""
-Get the database singleton.
+Insert the instance into the database.
 
 :param count: Count "get()" request
 
-:return: (Instance) Object on success
+:access: protected
 :since:  v0.1.00
 		"""
 
-		database = Connection.get_instance(False)
+		database = Connection.get_instance()
 		database.add(self)
 	#
 
 	def is_known(self):
 	#
 		"""
-Get the database singleton.
+Returns true if the instance is already saved in the database.
 
-:param count: Count "get()" request
-
-:return: (Instance) Object on success
+:return: (bool) True if known
 :since:  v0.1.00
 		"""
 
 		return inspect(self).has_identity
+	#
+
+	def reload(self):
+	#
+		"""
+Reload instance data from the database.
+
+:since: v0.1.00
+		"""
+
+		database = Connection.get_instance()
+		if (not inspect(self).detached): database.refresh(self)
+	#
+
+	def save(self):
+	#
+		"""
+Saves changes of the instance into the database.
+
+:since: v0.1.00
+		"""
+
+		if (self.is_known()): self.update()
+		else: self.insert()
+	#
+
+	def update(self):
+	#
+		"""
+Updates the instance already saved to the database.
+
+:access: protected
+:since:  v0.1.00
+		"""
+
+		if (inspect(self).detached):
+		#
+			database = Connection.get_instance()
+			database.add(self)
+		#
 	#
 
 	@reconstructor

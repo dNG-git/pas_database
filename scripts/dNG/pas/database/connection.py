@@ -18,7 +18,7 @@ obtain one at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------------------------
 http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
-#echo(pasDbVersion)#
+#echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
 ----------------------------------------------------------------------------
 NOTE_END //n"""
@@ -27,7 +27,8 @@ from os import path
 from random import randrange
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import scoped_session, sessionmaker
-from threading import RLock
+from threading import local, RLock
+from weakref import ref
 import re
 
 from dNG.pas.data.settings import Settings
@@ -48,13 +49,9 @@ class Connection(object):
              Mozilla Public License, v. 2.0
 	"""
 
-	instance = None
+	local = local()
 	"""
-Class instance
-	"""
-	ref_count = 0
-	"""
-Instances used
+Local data handle
 	"""
 	settings = { }
 	"""
@@ -82,7 +79,7 @@ happened.
 		"""
 SQLAlchemy session
 		"""
-		self.scoped_session_factory = scoped_session(sessionmaker(engine_from_config(Connection.settings, prefix = "sqlalchemy_", echo = "debug")))
+		self.scoped_session_factory = scoped_session(sessionmaker(engine_from_config(Connection.settings, prefix = "sqlalchemy_"), expire_on_commit = False))
 		"""
 Thread local session factory
 		"""
@@ -102,9 +99,15 @@ Destructor __del__(Instance)
 :since: v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.return_instance()
+		if (self.session != None):
+		# SQLAlchemy starts the most outer transaction itself by default
+			self.session.commit()
+			self.log_handler.debug("ex here")
 
-		self.session.close()
+			self.session.expunge_all()
+			self.session.close()
+		#
+
 		if (self.scoped_session_factory != None): self.scoped_session_factory.remove()
 	#
 
@@ -134,15 +137,12 @@ sqlalchemy.org: Begin a transaction on this Session.
 		"""
 
 		with Connection.synchronized:
-		#
-			if (self.transactions > 0):
-			# SQLAlchemy starts the most outer transaction itself by default
-				if (Connection.settings.get("pas_db_transaction_use_native_nested", True)): self.session.begin_nested()
-				else: self.session.begin(subtransactions = True)
-			#
+		# SQLAlchemy starts the most outer transaction itself by default
+			if (self.transactions > 0 and Connection.settings.get("pas_db_transaction_use_native_nested", True)): self.session.begin_nested()
+			else: self.session.begin(subtransactions = True)
 
-			self.transactions += 1
 			if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' started".format(self.transactions))
+			self.transactions += 1
 		#
 	#
 
@@ -159,8 +159,9 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 			if (self.transactions > 0):
 			#
 				self.session.commit()
-				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' committed".format(self.transactions))
+
 				self.transactions -= 1
+				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' committed".format(self.transactions))
 			#
 		#
 	#
@@ -184,25 +185,7 @@ Returns the current transaction depth.
 :since: v0.1.00
 		"""
 
-		return self.transactions
-	#
-
-	def return_instance(self):
-	#
-		"""
-The last "return_instance()" call will free the singleton reference.
-
-:since: v0.1.00
-		"""
-
-		with Connection.synchronized:
-		#
-			if (Connection.instance != None):
-			#
-				if (Connection.ref_count > 0): Connection.ref_count -= 1
-				if (Connection.ref_count == 0): Connection.instance = None
-			#
-		#
+		return (1 if (self.transactions < 0) else self.transactions)
 	#
 
 	def optimize(self, table):
@@ -240,36 +223,40 @@ sqlalchemy.org: Rollback the current transaction in progress.
 			if (self.transactions > 0):
 			#
 				self.session.rollback()
-				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' rolled back".format(self.transactions))
+
 				self.transactions -= 1
+				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' rolled back".format(self.transactions))
+				if (self.transactions < 1): self.session.rollback()
 			#
 		#
 	#
 
 	@staticmethod
-	def get_instance(count = True):
+	def get_instance():
 	#
 		"""
-Get the database singleton.
+Get the connection thread-local singleton.
 
-:param count: Count "get()" request
-
-:return: (Instance) Object on success
+:return: (Connection) Object on success
 :since:  v0.1.00
 		"""
 
+		var_return = None
+
 		with Connection.synchronized:
 		#
-			if (Connection.instance == None):
+			if (hasattr(Connection.local, "weakref_instance")): var_return = Connection.local.weakref_instance()
+
+			if (var_return == None):
 			#
 				Connection.get_settings()
-				Connection.instance = Connection()
-			#
+				var_return = Connection()
 
-			if (count): Connection.ref_count += 1
+				Connection.local.weakref_instance = ref(var_return)
+			#
 		#
 
-		return Connection.instance
+		return var_return
 	#
 
 	@staticmethod
