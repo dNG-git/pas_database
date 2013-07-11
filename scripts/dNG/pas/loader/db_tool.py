@@ -87,7 +87,7 @@ Callback for initialisation.
 		"""
 
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
-		Settings.read_file("{0}/settings/pas_db.json".format(Settings.get("path_data")), True)
+		Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
 		self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
 
@@ -96,13 +96,13 @@ Callback for initialisation.
 			Hooks.set_log_handler(self.log_handler)
 			NamedLoader.set_log_handler(self.log_handler)
 
-			self.log_handler.debug("#echo(__FILEPATH__)# -db_tool.callback_run(args)- (#echo(__LINE__)#)")
+			self.log_handler.debug("#echo(__FILEPATH__)# -DbTool.callback_run(args)- (#echo(__LINE__)#)")
 		#
 
 		Cli.register_shutdown_callback(self.callback_exit)
 
-		Hooks.load("db")
-		Hooks.call("dNG.pas.db.load_all")
+		Hooks.load("database")
+		Hooks.call("dNG.pas.database.load_all")
 		Hooks.register("dNG.pas.status.stop", self.stop)
 
 		database = Connection.get_instance()

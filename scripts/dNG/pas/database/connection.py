@@ -102,7 +102,6 @@ Destructor __del__(Instance)
 		if (self.session != None):
 		# SQLAlchemy starts the most outer transaction itself by default
 			self.session.commit()
-			self.log_handler.debug("ex here")
 
 			self.session.expunge_all()
 			self.session.close()
@@ -138,10 +137,10 @@ sqlalchemy.org: Begin a transaction on this Session.
 
 		with Connection.synchronized:
 		# SQLAlchemy starts the most outer transaction itself by default
-			if (self.transactions > 0 and Connection.settings.get("pas_db_transaction_use_native_nested", True)): self.session.begin_nested()
+			if (self.transactions > 0 and Connection.settings.get("pas_database_transaction_use_native_nested", True)): self.session.begin_nested()
 			else: self.session.begin(subtransactions = True)
 
-			if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' started".format(self.transactions))
+			if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' started".format(self.transactions))
 			self.transactions += 1
 		#
 	#
@@ -161,7 +160,7 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 				self.session.commit()
 
 				self.transactions -= 1
-				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' committed".format(self.transactions))
+				if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' committed".format(self.transactions))
 			#
 		#
 	#
@@ -225,7 +224,7 @@ sqlalchemy.org: Rollback the current transaction in progress.
 				self.session.rollback()
 
 				self.transactions -= 1
-				if (self.log_handler != None): self.log_handler.debug("pas.db transaction '{0:d}' rolled back".format(self.transactions))
+				if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' rolled back".format(self.transactions))
 				if (self.transactions < 1): self.session.rollback()
 			#
 		#
@@ -279,13 +278,13 @@ Get the configured database table prefix.
 			#
 				Hooks.load("db")
 
-				Settings.read_file("{0}/settings/pas_db.json".format(Settings.get("path_data")), True)
+				Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 				settings = Settings.get_instance()
 
 				for key in settings:
 				#
-					if (key == "pas_db_url"): Connection.settings['url'] = settings['pas_db_url'].replace("[path_base]", path.abspath(Settings.get("path_base")))
-					if (key.startswith("pas_db_")): Connection.settings[key[7:]] = settings[key]
+					if (key == "pas_database_url"): Connection.settings['url'] = settings['pas_database_url'].replace("[path_base]", path.abspath(Settings.get("path_base")))
+					if (key.startswith("pas_database_")): Connection.settings[key[7:]] = settings[key]
 				#
 
 				if ("url" not in Connection.settings): raise RuntimeError("Minimum database configuration missing", 38)

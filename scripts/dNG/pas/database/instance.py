@@ -65,15 +65,14 @@ happened.
 		"""
 	#
 
-	def insert(self):
+	def _insert(self):
 	#
 		"""
 Insert the instance into the database.
 
 :param count: Count "get()" request
 
-:access: protected
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		database = Connection.get_instance()
@@ -104,34 +103,6 @@ Reload instance data from the database.
 		if (not inspect(self).detached): database.refresh(self)
 	#
 
-	def save(self):
-	#
-		"""
-Saves changes of the instance into the database.
-
-:since: v0.1.00
-		"""
-
-		if (self.is_known()): self.update()
-		else: self.insert()
-	#
-
-	def update(self):
-	#
-		"""
-Updates the instance already saved to the database.
-
-:access: protected
-:since:  v0.1.00
-		"""
-
-		if (inspect(self).detached):
-		#
-			database = Connection.get_instance()
-			database.add(self)
-		#
-	#
-
 	@reconstructor
 	def sa_reconstructor(self):
 	#
@@ -144,6 +115,44 @@ from the database or otherwise reconstituted.
 		"""
 
 		self.__init__()
+	#
+
+	def save(self):
+	#
+		"""
+Saves changes of the instance into the database.
+
+:since: v0.1.00
+		"""
+
+		if (self.is_known()): self._update()
+		else: self._insert()
+	#
+
+	def set(self, **kwargs):
+	#
+		"""
+Sets values given as keyword arguments to this method.
+
+:since: v0.1.00
+		"""
+
+		raise RuntimeError("Not implemented", 38)
+	#
+
+	def _update(self):
+	#
+		"""
+Updates the instance already saved to the database.
+
+:since: v0.1.00
+		"""
+
+		if (inspect(self).detached):
+		#
+			database = Connection.get_instance()
+			database.add(self)
+		#
 	#
 
 	@staticmethod
