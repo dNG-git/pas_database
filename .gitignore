@@ -4,4 +4,4 @@ __py*
 *.pyc
 make*.py*
 nbproject
-pas_db.*
+pas_database.*

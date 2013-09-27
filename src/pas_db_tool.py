@@ -11,7 +11,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-http://www.direct-netware.de/redirect.py?pas;db
+http://www.direct-netware.de/redirect.py?pas;database
 
 This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can
@@ -34,7 +34,7 @@ try:
 	db_tool = DbTool()
 	db_tool.run()
 #
-except SystemExit: pass
+except KeyboardInterrupt: pass
 except Exception as handled_exception:
 #
 	if (db_tool != None):
