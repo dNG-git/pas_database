@@ -51,6 +51,8 @@ Tool to work with the configured database and its tables.
 		"""
 Constructor __init__(DbTool)
 
+:param args: Parsed command line arguments
+
 :since: v0.1.00
 		"""
 
