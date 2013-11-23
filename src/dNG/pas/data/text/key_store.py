@@ -31,7 +31,7 @@ from dNG.pas.data.settings import Settings
 from dNG.pas.data.traced_exception import TracedException
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
-from dNG.pas.database.instances.key_store import KeyStore as KeyStoreInstance
+from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
 
 class KeyStore(Instance):
 #
@@ -55,7 +55,7 @@ Constructor __init__(KeyStore)
 :since: v0.1.00
 		"""
 
-		if (db_instance == None): db_instance = KeyStoreInstance()
+		if (db_instance == None): db_instance = _DbKeyStore()
 		Instance.__init__(self, db_instance)
 
 		self.db_id = (None if (db_instance == None) else db_instance.id)
@@ -113,7 +113,7 @@ Implementation of the reloading SQLalchemy database instance logic.
 			if (self.local.db_instance == None):
 			#
 				if (self.db_id == None): raise TracedException("Database instance is not reloadable.")
-				self.local.db_instance = self._database.query(KeyStoreInstance).filter(KeyStoreInstance.id == self.db_id).one()
+				self.local.db_instance = self._database.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
 			#
 			else: Instance._reload(self)
 		#
@@ -135,7 +135,7 @@ Load KeyStore entry from database.
 		#
 			if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
 			#
-				if (database.query(KeyStoreInstance).filter(KeyStoreInstance.validity_end_date <= int(time())).delete() > 0): database.optimize_random(KeyStoreInstance)
+				if (database.query(_DbKeyStore).filter(_DbKeyStore.validity_end_date <= int(time())).delete() > 0): database.optimize_random(_DbKeyStore)
 			#
 
 			_return = (None if (db_instance == None) else KeyStore(db_instance))
@@ -157,7 +157,7 @@ Load KeyStore value by ID.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database: return KeyStore._load(database.query(KeyStoreInstance).filter(KeyStoreInstance.id == _id).first())
+		with Connection.get_instance() as database: return KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.id == _id).first())
 	#
 
 	@staticmethod
@@ -172,7 +172,7 @@ Load KeyStore value by key.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database: return KeyStore._load(database.query(KeyStoreInstance).filter(KeyStoreInstance.key == key).first())
+		with Connection.get_instance() as database: return KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
 	#
 #
 
