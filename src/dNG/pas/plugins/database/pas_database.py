@@ -52,7 +52,7 @@ Unregister plugin hooks.
 	Hooks.unregister("dNG.pas.Database.loadAll", plugin_db_load_all)
 #
 
-def plugin_registration ():
+def plugin_registration():
 #
 	"""
 Register plugin hooks.

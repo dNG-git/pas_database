@@ -168,10 +168,38 @@ Return the requested attributes.
 		with self:
 		#
 			_return = { }
-			for attribute in args: _return[attribute] = (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else None)
+			for attribute in args: _return[attribute] = self._data_get(attribute)
 		#
 
 		return _return
+	#
+
+	def _data_get(self, attribute):
+	#
+		"""
+Return the data for the requested attribute.
+
+:param attribute: Requested attribute
+
+:return: (dict) Value for the requested attribute
+:since:  v0.1.00
+		"""
+
+		return (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._data_get_unknown(attribute))
+	#
+
+	def _data_get_unknown(self, attribute):
+	#
+		"""
+Return the data for the requested attribute not defined for this instance.
+
+:param attribute: Requested attribute
+
+:return: (dict) Value for the requested attribute
+:since:  v0.1.00
+		"""
+
+		return None
 	#
 
 	def data_set(self, **kwargs):
