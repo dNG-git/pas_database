@@ -23,13 +23,15 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 NOTE_END //n"""
 
-from sqlalchemy import inspect
+from sqlalchemy.inspection import inspect
 from sqlalchemy.engine.result import ResultProxy
 from threading import local
 
-from dNG.pas.data.traced_exception import TracedException
 from dNG.pas.module.named_loader import NamedLoader
+from dNG.pas.runtime.io_exception import IOException
+from dNG.pas.runtime.not_implemented_exception import NotImplementedException
 from dNG.pas.runtime.thread_lock import ThreadLock
+from dNG.pas.runtime.value_exception import ValueException
 from .connection import Connection
 from .instance_iterator import InstanceIterator
 from .instances.abstract import Abstract
@@ -161,7 +163,7 @@ python.org: Exit the runtime context related to this object.
 		"""
 Return the requested attributes.
 
-:return: (dict) Values for the requested attributes
+:return: (dict) Values for the requested attributes; None for undefined ones
 :since:  v0.1.00
 		"""
 
@@ -181,7 +183,7 @@ Return the data for the requested attribute.
 
 :param attribute: Requested attribute
 
-:return: (dict) Value for the requested attribute
+:return: (dict) Value for the requested attribute; None if undefined
 :since:  v0.1.00
 		"""
 
@@ -195,11 +197,37 @@ Return the data for the requested attribute not defined for this instance.
 
 :param attribute: Requested attribute
 
-:return: (dict) Value for the requested attribute
+:return: (dict) Value for the requested attribute; None if undefined
 :since:  v0.1.00
 		"""
 
 		return None
+	#
+
+	def data_is_none(self, *args):
+	#
+		"""
+Return true if at least one of the attributes is "None".
+
+:return: (bool) True if at least one of the attributes is "None"
+:since:  v0.1.00
+		"""
+
+		with self:
+		#
+			_return = False
+
+			for attribute in args:
+			#
+				if (self._data_get(attribute) == None):
+				#
+					_return = True
+					break
+				#
+			#
+		#
+
+		return _return
 	#
 
 	def data_set(self, **kwargs):
@@ -210,7 +238,7 @@ Sets values given as keyword arguments to this method.
 :since: v0.1.00
 		"""
 
-		raise TracedException("Not implemented")
+		raise NotImplementedException()
 	#
 
 	def delete(self):
@@ -257,10 +285,10 @@ Insert the instance into the database.
 :since: v0.1.00
 		"""
 
-		with self.lock, Connection.get_instance():
+		with self.lock, Connection.get_instance() as database:
 		#
 			instance_state = inspect(self.local.db_instance)
-			if (instance_state.transient): self._database.add(self.local.db_instance)
+			if (instance_state.transient): database.add(self.local.db_instance)
 		#
 	#
 
@@ -298,7 +326,7 @@ Implementation of the reloading SQLalchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		if (self.local.db_instance == None): raise TracedException("Database instance is not reloadable.")
+		if (self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
 		self._database.refresh(self.local.db_instance)
 	#
 
@@ -340,7 +368,7 @@ database instances with an given class.
 :since:  v0.1.00
 		"""
 
-		if (not isinstance(result, ResultProxy)): raise TracedException("Invalid database result given")
+		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
 		return InstanceIterator(entity, result, True, instance_class, *args, **kwargs)
 	#
 
@@ -359,7 +387,7 @@ database instances with an given class.
 :since:  v0.1.00
 		"""
 
-		if (not isinstance(result, ResultProxy)): raise TracedException("Invalid database result given")
+		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
 		return InstanceIterator(entity, result, False, instance_class, *args, **kwargs)
 	#
 
@@ -381,6 +409,23 @@ python.org: Called to create a new instance of class cls..
 		else: _return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
 
 		return _return
+	#
+
+	@staticmethod
+	def _wrap_getter(key):
+	#
+		"""
+Wraps a "get*" method to return the given database entry value or
+alternatively the given default one.
+
+:param key: Key to create the "get*" method for
+
+:return: (object) Proxy method
+:since:  v0.1.00
+		"""
+
+		def proxymethod(self): return self.data_get(key)[key]
+		return proxymethod
 	#
 #
 

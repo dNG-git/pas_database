@@ -32,10 +32,11 @@ from weakref import ref
 import re
 
 from dNG.pas.data.settings import Settings
-from dNG.pas.data.traced_exception import TracedException
 from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.plugins.hooks import Hooks
 from dNG.pas.runtime.thread_lock import ThreadLock
+from dNG.pas.runtime.type_exception import TypeException
+from dNG.pas.runtime.value_exception import ValueException
 
 class Connection(object):
 #
@@ -209,7 +210,7 @@ class tree for self).
 :since:  v0.1.00
 		"""
 
-		if (self.session == None or (not hasattr(self.session, name))): raise AttributeError("SQLalchemy session does not implement '{0}'".format(name))
+		if (self.session == None or (not hasattr(self.session, name))): raise TypeException("SQLalchemy session does not implement '{0}'".format(name))
 		return getattr(self.session, name)
 	#
 
@@ -355,16 +356,19 @@ Get the Connection thread-local singleton.
 
 		_return = None
 
-		with Connection.serialized_lock:
+		if (hasattr(Connection.local, "weakref_instance")): _return = Connection.local.weakref_instance()
+		else:
 		#
-			if (hasattr(Connection.local, "weakref_instance")): _return = Connection.local.weakref_instance()
-			elif (Connection.session == None): Hooks.load("database")
+			with Connection.serialized_lock:
+			#
+				if (Connection.session == None): Hooks.load("database")
+			#
+		#
 
-			if (_return == None):
-			#
-				_return = Connection()
-				Connection.local.weakref_instance = ref(_return)
-			#
+		if (_return == None):
+		#
+			_return = Connection()
+			Connection.local.weakref_instance = ref(_return)
 		#
 
 		return _return
@@ -425,7 +429,7 @@ sure that these variables are defined.
 			Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 			Connection.local.settings = Settings.get_instance()
 
-			if ("pas_database_url" not in Connection.local.settings): raise TracedException("Minimum database configuration missing")
+			if ("pas_database_url" not in Connection.local.settings): raise ValueException("Minimum database configuration missing")
 			Connection.local.settings['pas_database_url'] = Connection.local.settings['pas_database_url'].replace("[rewrite]path_base[/rewrite]", path.abspath(Connection.local.settings.get("path_base")))
 
 			if ("pas_database_table_prefix" not in Connection.local.settings): Connection.local.settings['pas_database_table_prefix'] = "pas"

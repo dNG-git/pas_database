@@ -28,10 +28,10 @@ from time import time
 
 from dNG.pas.data.binary import Binary
 from dNG.pas.data.settings import Settings
-from dNG.pas.data.traced_exception import TracedException
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
 from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
+from dNG.pas.runtime.io_exception import IOException
 
 class KeyStore(Instance):
 #
@@ -81,6 +81,22 @@ Sets values given as keyword arguments to this method.
 		#
 	#
 
+	get_id = Instance._wrap_getter("id")
+	"""
+Returns the ID of this instance.
+
+:return: (str) KeyStore entry ID; None if undefined
+:since:  v0.1.00
+	"""
+
+	get_key = Instance._wrap_getter("id")
+	"""
+Returns the key of this instance.
+
+:return: (str) KeyStore entry key; None if undefined
+:since:  v0.1.00
+	"""
+
 	def is_valid(self):
 	#
 		"""
@@ -112,7 +128,7 @@ Implementation of the reloading SQLalchemy database instance logic.
 		#
 			if (self.local.db_instance == None):
 			#
-				if (self.db_id == None): raise TracedException("Database instance is not reloadable.")
+				if (self.db_id == None): raise IOException("Database instance is not reloadable.")
 				self.local.db_instance = self._database.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
 			#
 			else: Instance._reload(self)
