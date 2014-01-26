@@ -74,12 +74,16 @@ Constructor __init__(Abstract)
 
 		super(Abstract, self).__init__(*args, **kwargs)
 
-		with Abstract.lock:
+		if (not Abstract.event_bound):
 		#
-			if (not Abstract.event_bound):
+			# Event could be bound in another thread so check again
+			with Abstract.lock:
 			#
-				listen(Abstract, "translate_row", Abstract.on_translate_row, propagate = True)
-				Abstract.event_bound = True
+				if (not Abstract.event_bound):
+				#
+					listen(Abstract, "translate_row", Abstract.on_translate_row, propagate = True)
+					Abstract.event_bound = True
+				#
 			#
 		#
 	#

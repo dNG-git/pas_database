@@ -110,14 +110,14 @@ python.org: Enter the runtime context related to this object.
 			#
 			elif (self.context_depth > 0): self.context_depth += 1
 
-			if (self.local.db_instance == None): self.reload()
-			else:
+			if (self.local.db_instance != None):
 			#
 				with self.lock:
 				#
 					if (inspect(self.local.db_instance).detached): self._database.add(self.local.db_instance)
 				#
 			#
+			elif (self.is_reloadable()): self.reload()
 		#
 		except Exception:
 		#
@@ -187,7 +187,10 @@ Return the data for the requested attribute.
 :since:  v0.1.00
 		"""
 
-		return (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._data_get_unknown(attribute))
+		_return = None
+		if (self.local.db_instance != None): _return = (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._data_get_unknown(attribute))
+
+		return _return
 	#
 
 	def _data_get_unknown(self, attribute):
@@ -302,6 +305,19 @@ Returns true if the instance is already saved in the database.
 		"""
 
 		with self: return inspect(self.local.db_instance).has_identity
+	#
+
+	def is_reloadable(self):
+	#
+		"""
+Returns true if the instance can be reloaded automatically in another
+thread.
+
+:return: (bool) True if reloadable
+:since:  v0.1.00
+		"""
+
+		return False
 	#
 
 	def reload(self):
