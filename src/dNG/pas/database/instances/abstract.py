@@ -27,6 +27,7 @@ from sqlalchemy.event import listen
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import configure_mappers, reconstructor
 from sqlalchemy.orm.interfaces import EXT_CONTINUE
+from sqlalchemy.orm.mapper import Mapper
 
 from dNG.pas.database.connection import Connection
 from dNG.pas.module.named_loader import NamedLoader
@@ -81,7 +82,7 @@ Constructor __init__(Abstract)
 			#
 				if (not Abstract.event_bound):
 				#
-					listen(Abstract, "translate_row", Abstract.on_translate_row, propagate = True)
+					listen(Mapper, "translate_row", Abstract.on_translate_row)
 					Abstract.event_bound = True
 				#
 			#
