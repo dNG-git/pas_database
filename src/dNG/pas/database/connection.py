@@ -114,6 +114,8 @@ Destructor __del__(Connection)
 :since: v0.1.00
 		"""
 
+		# pylint: disable=broad-except
+
 		if (self.session != None):
 		# SQLAlchemy starts the most outer transaction itself by default
 			if (self.transactions < 0):
@@ -171,6 +173,8 @@ python.org: Exit the runtime context related to this object.
 
 :since: v0.1.00
 		"""
+
+		# pylint: disable=broad-except
 
 		with self.lock:
 		#

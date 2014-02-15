@@ -42,6 +42,8 @@ Database based key-value store.
              Mozilla Public License, v. 2.0
 	"""
 
+	# pylint: disable=invalid-name
+
 	__tablename__ = "{0}_key_store".format(Abstract.get_table_prefix())
 	"""
 SQLAlchemy table name

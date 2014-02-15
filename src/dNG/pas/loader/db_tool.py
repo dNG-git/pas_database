@@ -46,6 +46,8 @@ Tool to work with the configured database and its tables.
              Mozilla Public License, v. 2.0
 	"""
 
+	# pylint: disable=unused-argument
+
 	def __init__(self):
 	#
 		"""
@@ -82,6 +84,8 @@ Callback for initialisation.
 
 :since: v1.0.0
 		"""
+
+		# pylint: disable=no-member
 
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
 		Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)

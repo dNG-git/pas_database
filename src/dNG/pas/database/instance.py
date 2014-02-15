@@ -31,6 +31,7 @@ from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.runtime.io_exception import IOException
 from dNG.pas.runtime.not_implemented_exception import NotImplementedException
 from dNG.pas.runtime.thread_lock import ThreadLock
+from dNG.pas.runtime.type_exception import TypeException
 from dNG.pas.runtime.value_exception import ValueException
 from .connection import Connection
 from .instance_iterator import InstanceIterator
@@ -50,6 +51,8 @@ instance.
 :license:    http://www.direct-netware.de/redirect.py?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
+
+	# pylint: disable=unused-argument
 
 	def __init__(self, db_instance = None):
 	#
@@ -98,6 +101,8 @@ python.org: Enter the runtime context related to this object.
 :since: v0.1.00
 		"""
 
+		# pylint: disable=broad-except,protected-access
+
 		self._database = Connection.get_instance()
 		Connection._acquire()
 
@@ -134,6 +139,8 @@ python.org: Exit the runtime context related to this object.
 :since: v0.1.00
 		"""
 
+		# pylint: disable=broad-except,protected-access
+
 		if (self.context_depth > 0):
 		#
 			self.context_depth -= 1
@@ -156,6 +163,25 @@ python.org: Exit the runtime context related to this object.
 		#
 
 		Connection._release()
+	#
+
+	def __new__(cls, *args, **kwargs):
+	#
+		"""
+python.org: Called to create a new instance of class cls.
+
+:return: (object) Instance object
+:since:  v0.1.00
+		"""
+
+		db_instance = (kwargs['db_instance'] if ("db_instance" in kwargs) else None)
+		if (db_instance == None): db_instance = (args[0] if (len(args) > 0) else None)
+		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class) if (isinstance(db_instance, Abstract) and db_instance.db_instance_class != None) else None)
+
+		if (db_instance_class == None or cls == db_instance_class): _return = object.__new__(cls)
+		else: _return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
+
+		return _return
 	#
 
 	def data_get(self, *args):
@@ -408,26 +434,6 @@ database instances with an given class.
 	#
 
 	@staticmethod
-	def __new__(cls, *args, **kwargs):
-	#
-		"""
-python.org: Called to create a new instance of class cls..
-
-:return: (object) Instance object
-:since:  v0.1.00
-		"""
-
-		db_instance = (kwargs['db_instance'] if ("db_instance" in kwargs) else None)
-		if (db_instance == None): db_instance = (args[0] if (len(args) > 0) else None)
-		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class) if (isinstance(db_instance, Abstract) and db_instance.db_instance_class != None) else None)
-
-		if (db_instance_class == None or cls == db_instance_class): _return = object.__new__(cls)
-		else: _return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
-
-		return _return
-	#
-
-	@staticmethod
 	def _wrap_getter(key):
 	#
 		"""
@@ -440,7 +446,58 @@ alternatively the given default one.
 :since:  v0.1.00
 		"""
 
-		def proxymethod(self): return self.data_get(key)[key]
+		def proxymethod(self):
+		#
+			"""
+Load instance by the given key value.
+
+:return: (object) Instance object
+:since:  v0.1.00
+			"""
+
+			return self.data_get(key)[key]
+		#
+
+		return proxymethod
+	#
+
+	@staticmethod
+	def _wrap_loader(entity):
+	#
+		"""
+Wraps a "load" method to return the encapsulated database instance based on
+the given SQLAlchemy entity class.
+
+:return: (object) Proxy method
+:since:  v0.1.00
+		"""
+
+		# pylint: disable=star-args
+
+		def proxymethod(**kwargs):
+		#
+			"""
+Load instance by the given criteria (AND condition is used).
+
+:return: (object) Instance object
+:since:  v0.1.00
+			"""
+
+			if ((not hasattr(entity, "db_instance_class")) or entity.db_instance_class == None): raise TypeException("Given entity does not correctly define the encapsulated database instance.")
+			criteria = [ ]
+
+			for attribute in kwargs:
+			#
+				if (not hasattr(entity.db_instance_class, attribute)): raise ValueException("Given entity attribute is not defined.")
+				criteria.append(getattr(entity.db_instance_class, attribute) == kwargs[attribute])
+			#
+
+			with Connection.get_instance() as database: db_instance = database.query(entity.db_instance_class).filter(*criteria).first()
+			if (db_instance == None): raise ValueException("Encapsulated database instance not found for given criteria")
+
+			return entity.db_instance_class(db_instance)
+		#
+
 		return proxymethod
 	#
 #

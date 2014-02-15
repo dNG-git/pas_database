@@ -47,6 +47,8 @@ This class provides abstract SQLAlchemy database instances.
              Mozilla Public License, v. 2.0
 	"""
 
+	# pylint: disable=unused-argument
+
 	__abstract__ = True
 	"""
 sqlalchemy.org: "__abstract__" causes declarative to skip the production

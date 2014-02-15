@@ -67,6 +67,8 @@ python.org: Enter the runtime context related to this object.
 :since: v0.1.00
 		"""
 
+		# pylint: disable=broad-except,protected-access
+
 		self._database = Connection.get_instance()
 		Connection._acquire()
 
@@ -89,6 +91,8 @@ python.org: Exit the runtime context related to this object.
 
 :since: v0.1.00
 		"""
+
+		# pylint: disable=broad-except,protected-access
 
 		if (self.context_depth > 0):
 		#
