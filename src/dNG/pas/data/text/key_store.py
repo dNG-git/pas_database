@@ -47,6 +47,8 @@ Database based encoded key-value store.
              Mozilla Public License, v. 2.0
 	"""
 
+	# pylint: disable=maybe-no-member
+
 	def __init__(self, db_instance = None):
 	#
 		"""
@@ -75,8 +77,8 @@ Sets values given as keyword arguments to this method.
 		with self:
 		#
 			if ("key" in kwargs): self.local.db_instance.key = Binary.utf8(kwargs['key'])
-			if ("validity_start_date" in kwargs): self.local.db_instance.validity_date = kwargs['validity_start_date']
-			if ("validity_end_date" in kwargs): self.local.db_instance.validity_date = kwargs['validity_end_date']
+			if ("validity_start_date" in kwargs): self.local.db_instance.validity_start_date = kwargs['validity_start_date']
+			if ("validity_end_date" in kwargs): self.local.db_instance.validity_end_date = kwargs['validity_end_date']
 			if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
 		#
 	#
