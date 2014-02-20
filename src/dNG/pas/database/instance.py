@@ -101,7 +101,7 @@ python.org: Enter the runtime context related to this object.
 :since: v0.1.00
 		"""
 
-		# pylint: disable=broad-except,protected-access
+		# pylint: disable=broad-except,maybe-no-member,protected-access
 
 		self._database = Connection.get_instance()
 		Connection._acquire()
@@ -314,6 +314,8 @@ Insert the instance into the database.
 :since: v0.1.00
 		"""
 
+		# pylint: disable=maybe-no-member
+
 		with self.lock, Connection.get_instance() as database:
 		#
 			instance_state = inspect(self.local.db_instance)
@@ -329,6 +331,8 @@ Returns true if the instance is already saved in the database.
 :return: (bool) True if known
 :since:  v0.1.00
 		"""
+
+		# pylint: disable=maybe-no-member
 
 		with self: return inspect(self.local.db_instance).has_identity
 	#
