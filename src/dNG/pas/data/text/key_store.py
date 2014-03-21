@@ -121,7 +121,7 @@ Returns true if the KeyStore entry is active and valid.
 	def _reload(self):
 	#
 		"""
-Implementation of the reloading SQLalchemy database instance logic.
+Implementation of the reloading SQLAlchemy database instance logic.
 
 :since: v0.1.00
 		"""

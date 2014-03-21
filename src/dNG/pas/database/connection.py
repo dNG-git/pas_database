@@ -214,7 +214,7 @@ class tree for self).
 :since:  v0.1.00
 		"""
 
-		if (self.session == None or (not hasattr(self.session, name))): raise TypeException("SQLalchemy session does not implement '{0}'".format(name))
+		if (self.session == None or (not hasattr(self.session, name))): raise TypeException("SQLAlchemy session does not implement '{0}'".format(name))
 		return getattr(self.session, name)
 	#
 

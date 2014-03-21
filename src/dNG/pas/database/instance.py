@@ -25,6 +25,7 @@ NOTE_END //n"""
 
 from sqlalchemy.inspection import inspect
 from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.sql.expression import asc, desc
 from threading import local
 
 from dNG.pas.module.named_loader import NamedLoader
@@ -35,6 +36,7 @@ from dNG.pas.runtime.type_exception import TypeException
 from dNG.pas.runtime.value_exception import ValueException
 from .connection import Connection
 from .instance_iterator import InstanceIterator
+from .sort_definition import SortDefinition
 from .instances.abstract import Abstract
 
 class Instance(object):
@@ -67,6 +69,10 @@ Constructor __init__(Instance)
 		self.context_depth = 0
 		"""
 Runtime context depth
+		"""
+		self._db_sort_tuples = [ ]
+		"""
+List of tuples defining the attribute and sort direction
 		"""
 		self._database = None
 		"""
@@ -270,6 +276,37 @@ Sets values given as keyword arguments to this method.
 		raise NotImplementedException()
 	#
 
+	def _db_apply_sort_definition(self, query):
+	#
+		"""
+Apply the sort order to the given SQLAlchemy query instance.
+
+:param query: SQLAlchemy query instance
+
+:return: (object) Modified SQLAlchemy query instance
+:since:  v0.1.00
+		"""
+
+		_return = query
+
+		with self:
+		#
+			for sort_definition in self._db_sort_tuples:
+			#
+				if (hasattr(self.local.db_instance.__class__, sort_definition[0])):
+				#
+					_return = _return.order_by(
+						asc(getattr(self.local.db_instance.__class__, sort_definition[0]))
+						if (sort_definition[1] == SortDefinition.ASCENDING) else
+						desc(getattr(self.local.db_instance.__class__, sort_definition[0]))
+					)
+				#
+			#
+		#
+
+		return _return
+	#
+
 	def delete(self):
 	#
 		"""
@@ -367,7 +404,7 @@ Reload instance data from the database.
 	def _reload(self):
 	#
 		"""
-Implementation of the reloading SQLalchemy database instance logic.
+Implementation of the reloading SQLAlchemy database instance logic.
 
 :since: v0.1.00
 		"""
@@ -388,6 +425,19 @@ Saves changes of the instance into the database.
 		else: self._insert()
 	#
 
+	def set_sort_definition(self, sort_definition):
+	#
+		"""
+Returns the current sort definition list.
+
+:return: (list) Sort definition list
+:since:  v0.1.00
+		"""
+
+		if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
+		self._db_sort_tuples = sort_definition.get_list()
+	#
+
 	def _update(self):
 	#
 		"""
@@ -403,11 +453,11 @@ Updates the instance already saved to the database.
 	def buffered_iterator(entity, result, instance_class = None, *args, **kwargs):
 	#
 		"""
-Returns an instance wrapping buffered iterator to encapsulate SQLalchemy
+Returns an instance wrapping buffered iterator to encapsulate SQLAlchemy
 database instances with an given class.
 
-:param entity: SQLalchemy database entity
-:param cursor: SQLalchemy result cursor
+:param entity: SQLAlchemy database entity
+:param cursor: SQLAlchemy result cursor
 :param instance_class: Encapsulating database instance class
 
 :return: (Iterator) InstanceIterator object
@@ -422,11 +472,11 @@ database instances with an given class.
 	def iterator(entity, result, instance_class = None, *args, **kwargs):
 	#
 		"""
-Returns an instance wrapping unbuffered iterator to encapsulate SQLalchemy
+Returns an instance wrapping unbuffered iterator to encapsulate SQLAlchemy
 database instances with an given class.
 
-:param entity: SQLalchemy database entity
-:param cursor: SQLalchemy result cursor
+:param entity: SQLAlchemy database entity
+:param cursor: SQLAlchemy result cursor
 :param instance_class: Encapsulating database instance class
 
 :return: (Iterator) InstanceIterator object

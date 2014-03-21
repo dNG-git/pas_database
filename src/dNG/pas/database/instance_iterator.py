@@ -34,7 +34,7 @@ class InstanceIterator(Iterator):
 #
 	"""
 "InstanceIterator" provides an instance wrapping iterator to encapsulate
-SQLalchemy database instances with an given class.
+SQLAlchemy database instances with an given class.
 
 :author:     direct Netware Group
 :copyright:  (C) direct Netware Group - All rights reserved
@@ -50,8 +50,8 @@ SQLalchemy database instances with an given class.
 		"""
 Constructor __init__(InstanceIterator)
 
-:param entity: SQLalchemy database entity
-:param cursor: SQLalchemy result cursor
+:param entity: SQLAlchemy database entity
+:param cursor: SQLAlchemy result cursor
 :param buffered: True to buffer the result
 :param instance_class: Encapsulating database instance class
 
