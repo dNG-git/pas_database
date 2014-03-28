@@ -26,12 +26,15 @@ NOTE_END //n"""
 from random import randrange
 from time import time
 
+from dNG.data.json_resource import JsonResource
 from dNG.pas.data.binary import Binary
 from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
 from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
 from dNG.pas.runtime.io_exception import IOException
+from dNG.pas.runtime.type_exception import TypeException
+from dNG.pas.runtime.value_exception import ValueException
 
 class KeyStore(Instance):
 #
@@ -66,6 +69,20 @@ Database ID used for reloading
 		"""
 	#
 
+	def data_get_dict(self):
+	#
+		"""
+Returns the values originally given as a dict to this KeyStore instance.
+
+:return: (dict) Values from the KeyStore
+:since:  v0.1.00
+		"""
+
+		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
+		if (_return == None): raise ValueException("Value of the KeyStore does not contain the expected data format")
+		return _return
+	#
+
 	def data_set(self, **kwargs):
 	#
 		"""
@@ -81,6 +98,20 @@ Sets values given as keyword arguments to this method.
 			if ("validity_end_date" in kwargs): self.local.db_instance.validity_end_date = kwargs['validity_end_date']
 			if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
 		#
+	#
+
+	def data_set_dict(self, data):
+	#
+		"""
+Sets the values given as a dict as the value of this KeyStore instance.
+
+:param data: Dict to be set as value
+
+:since: v0.1.00
+		"""
+
+		if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
+		self.data_set(value = JsonResource().data_to_json(data))
 	#
 
 	get_id = Instance._wrap_getter("id")

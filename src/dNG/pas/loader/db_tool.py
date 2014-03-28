@@ -101,8 +101,8 @@ Callback for initialisation.
 		#
 
 		Hooks.load("database")
-		Hooks.call("dNG.pas.Database.loadAll")
 		Hooks.register("dNG.pas.Status.stop", self.stop)
+		Hooks.call("dNG.pas.Database.loadAll")
 
 		database = Connection.get_instance()
 		Abstract().metadata.create_all(database.get_bind())
