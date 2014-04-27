@@ -28,7 +28,7 @@ NOTE_END //n"""
 from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.plugins.hooks import Hooks
 
-def plugin_db_load_all(params = None, last_return = None):
+def plugin_database_load_all(params, last_return):
 #
 	"""
 Load and register all SQLAlchemy objects to generate database tables.
@@ -36,7 +36,8 @@ Load and register all SQLAlchemy objects to generate database tables.
 :param params: Parameter specified
 :param last_return: The return value from the last hook called.
 
-:since: v0.1.00
+:return: (mixed) Return value
+:since:  v0.1.00
 	"""
 
 	NamedLoader.get_instance("dNG.pas.database.instances.KeyStore")
@@ -51,7 +52,7 @@ Unregister plugin hooks.
 :since: v0.1.00
 	"""
 
-	Hooks.unregister("dNG.pas.Database.loadAll", plugin_db_load_all)
+	Hooks.unregister("dNG.pas.Database.loadAll", plugin_database_load_all)
 #
 
 def plugin_registration():
@@ -62,7 +63,7 @@ Register plugin hooks.
 :since: v0.1.00
 	"""
 
-	Hooks.register("dNG.pas.Database.loadAll", plugin_db_load_all)
+	Hooks.register("dNG.pas.Database.loadAll", plugin_database_load_all)
 #
 
 ##j## EOF

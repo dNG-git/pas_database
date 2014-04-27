@@ -29,7 +29,9 @@ from sqlalchemy import engine_from_config
 from sqlalchemy.orm import sessionmaker
 from threading import local
 from weakref import ref
-import re
+
+try: from urllib.parse import urlsplit
+except ImportError: from urlparse import urlsplit
 
 from dNG.pas.data.settings import Settings
 from dNG.pas.module.named_loader import NamedLoader
@@ -349,6 +351,20 @@ threads at once (serialized mode).
 	#
 
 	@staticmethod
+	def get_backend_name():
+	#
+		"""
+Returns the connection backend.
+
+:return: (str) Database backend
+:since:  v0.1.00
+		"""
+
+		Connection._thread_local_check()
+		return Connection.local.settings['pas_database_backend_name']
+	#
+
+	@staticmethod
 	def get_instance():
 	#
 		"""
@@ -440,8 +456,29 @@ sure that these variables are defined.
 			Connection.local.serialized = ("pas_database_threaded" in Connection.local.settings and (not Connection.local.settings['pas_database_threaded']))
 			if (Connection.local.serialized): Connection.serialized_lock.set_timeout(Connection.local.settings.get("pas_database_lock_timeout", 30))
 
-			if ("@" in Connection.local.settings['pas_database_url'] or "password" not in Connection.local.settings or "user" not in Connection.local.settings): Connection.local.settings['pas_database_sqlalchemy_url'] = Connection.local.settings['pas_database_url']
-			else: Connection.local.settings['pas_database_sqlalchemy_url'] = re.sub("^(.+)\\://(.*)$", "\\1://{0}:{1}@\\2".format(Connection.local.settings['pas_database_user'], Connection.local.settings['pas_database_password']), Connection.local.settings['pas_database_url'])
+			url_elements = urlsplit(Connection.local.settings['pas_database_url'])
+
+			Connection.local.settings['pas_database_backend_name'] = url_elements.scheme.split("+")[0]
+
+			if (
+				url_elements.username == None and
+				url_elements.password == None and
+				"pas_database_user" in Connection.local.settings and
+				"pas_database_password" in Connection.local.settings
+			):
+			#
+				Connection.local.settings['pas_database_sqlalchemy_url'] = "{0}://{1}:{2}@{3}{4}".format(
+					url_elements.scheme,
+					Connection.local.settings['pas_database_user'],
+					Connection.local.settings['pas_database_password'],
+					url_elements.hostname,
+					url_elements.path
+				)
+
+				if (url_elements.query != ""): Connection.local.settings['pas_database_sqlalchemy_url'] += "?{0}".format(url_elements.query)
+				if (url_elements.fragment != ""): Connection.local.settings['pas_database_sqlalchemy_url'] += "#{0}".format(url_elements.fragment)
+			#
+			else: Connection.local.settings['pas_database_sqlalchemy_url'] = Connection.local.settings['pas_database_url']
 		#
 	#
 #
