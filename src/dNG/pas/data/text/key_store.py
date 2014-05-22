@@ -69,51 +69,6 @@ Database ID used for reloading
 		"""
 	#
 
-	def data_get_dict(self):
-	#
-		"""
-Returns the values originally given as a dict to this KeyStore instance.
-
-:return: (dict) Values from the KeyStore
-:since:  v0.1.00
-		"""
-
-		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
-		if (_return == None): raise ValueException("Value of the KeyStore does not contain the expected data format")
-		return _return
-	#
-
-	def data_set(self, **kwargs):
-	#
-		"""
-Sets values given as keyword arguments to this method.
-
-:since: v0.1.00
-		"""
-
-		with self:
-		#
-			if ("key" in kwargs): self.local.db_instance.key = Binary.utf8(kwargs['key'])
-			if ("validity_start_date" in kwargs): self.local.db_instance.validity_start_date = kwargs['validity_start_date']
-			if ("validity_end_date" in kwargs): self.local.db_instance.validity_end_date = kwargs['validity_end_date']
-			if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
-		#
-	#
-
-	def data_set_dict(self, data):
-	#
-		"""
-Sets the values given as a dict as the value of this KeyStore instance.
-
-:param data: Dict to be set as value
-
-:since: v0.1.00
-		"""
-
-		if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
-		self.data_set(value = JsonResource().data_to_json(data))
-	#
-
 	get_id = Instance._wrap_getter("id")
 	"""
 Returns the ID of this instance.
@@ -129,6 +84,20 @@ Returns the key of this instance.
 :return: (str) KeyStore entry key; None if undefined
 :since:  v0.1.00
 	"""
+
+	def get_value_dict(self):
+	#
+		"""
+Returns the values originally given as a dict to this KeyStore instance.
+
+:return: (dict) Values from the KeyStore
+:since:  v0.1.00
+		"""
+
+		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
+		if (_return == None): raise ValueException("Value of the KeyStore does not contain the expected data format")
+		return _return
+	#
 
 	def is_valid(self):
 	#
@@ -157,7 +126,7 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		with self.lock:
+		with self._lock:
 		#
 			if (self.local.db_instance == None):
 			#
@@ -166,6 +135,37 @@ Implementation of the reloading SQLAlchemy database instance logic.
 			#
 			else: Instance._reload(self)
 		#
+	#
+
+	def set_data_attributes(self, **kwargs):
+	#
+		"""
+Sets values given as keyword arguments to this method.
+
+:since: v0.1.00
+		"""
+
+		with self:
+		#
+			if ("key" in kwargs): self.local.db_instance.key = Binary.utf8(kwargs['key'])
+			if ("validity_start_date" in kwargs): self.local.db_instance.validity_start_date = kwargs['validity_start_date']
+			if ("validity_end_date" in kwargs): self.local.db_instance.validity_end_date = kwargs['validity_end_date']
+			if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
+		#
+	#
+
+	def set_value_dict(self, data):
+	#
+		"""
+Sets the values given as a dict as the value of this KeyStore instance.
+
+:param data: Dict to be set as value
+
+:since: v0.1.00
+		"""
+
+		if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
+		self.set_data_attributes(value = JsonResource().data_to_json(data))
 	#
 
 	@staticmethod

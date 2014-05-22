@@ -30,7 +30,7 @@ from dNG.pas.database.connection import Connection
 from dNG.pas.database.instances.abstract import Abstract
 from dNG.pas.loader.cli import Cli
 from dNG.pas.module.named_loader import NamedLoader
-from dNG.pas.plugins.hooks import Hooks
+from dNG.pas.plugins.hook import Hook
 
 class DbTool(Cli):
 #
@@ -62,25 +62,14 @@ Constructor __init__(DbTool)
 
 		self.arg_parser = ArgumentParser()
 
-		Cli.register_run_callback(self._callback_run)
-		Cli.register_shutdown_callback(self._callback_exit)
+		Cli.register_run_callback(self._on_run)
+		Cli.register_shutdown_callback(self._on_shutdown)
 	#
 
-	def _callback_exit(self):
-	#
-		"""
-Callback for application exit.
-
-:since: v0.1.00
-		"""
-
-		Hooks.call("dNG.pas.Status.shutdown")
-	#
-
-	def _callback_run(self, args):
+	def _on_run(self, args):
 	#
 		"""
-Callback for initialisation.
+Callback for execution.
 
 :since: v1.0.0
 		"""
@@ -94,18 +83,29 @@ Callback for initialisation.
 
 		if (self.log_handler != None):
 		#
-			Hooks.set_log_handler(self.log_handler)
+			Hook.set_log_handler(self.log_handler)
 			NamedLoader.set_log_handler(self.log_handler)
 
-			self.log_handler.debug("#echo(__FILEPATH__)# -DbTool._callback_run(args)- (#echo(__LINE__)#)")
+			self.log_handler.debug("#echo(__FILEPATH__)# -DbTool._on_run(args)- (#echo(__LINE__)#)")
 		#
 
-		Hooks.load("database")
-		Hooks.register("dNG.pas.Status.stop", self.stop)
-		Hooks.call("dNG.pas.Database.loadAll")
+		Hook.load("database")
+		Hook.register("dNG.pas.Status.stop", self.stop)
+		Hook.call("dNG.pas.Database.loadAll")
 
 		database = Connection.get_instance()
 		Abstract().metadata.create_all(database.get_bind())
+	#
+
+	def _on_shutdown(self):
+	#
+		"""
+Callback for shutdown.
+
+:since: v0.1.00
+		"""
+
+		Hook.call("dNG.pas.Status.onShutdown")
 	#
 
 	def stop(self, params = None, last_return = None):

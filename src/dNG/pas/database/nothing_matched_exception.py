@@ -2,7 +2,7 @@
 ##j## BOF
 
 """
-dNG.pas.plugins.database.pas_database
+dNG.pas.database.NothingMatchedException
 """
 """n// NOTE
 ----------------------------------------------------------------------------
@@ -23,47 +23,36 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 NOTE_END //n"""
 
-# pylint: disable=unused-argument
+from dNG.pas.runtime.value_exception import ValueException
 
-from dNG.pas.module.named_loader import NamedLoader
-from dNG.pas.plugins.hook import Hook
-
-def load_all(params, last_return = None):
+class NothingMatchedException(ValueException):
 #
 	"""
-Load and register all SQLAlchemy objects to generate database tables.
+"NothingMatchedException" is raised when no entry matched the given
+query condition.
 
-:param params: Parameter specified
-:param last_return: The return value from the last hook called.
-
-:return: (mixed) Return value
-:since:  v0.1.00
+:author:     direct Netware Group
+:copyright:  direct Netware Group - All rights reserved
+:package:    pas
+:subpackage: database
+:since:      v0.1.01
+:license:    http://www.direct-netware.de/redirect.py?licenses;mpl2
+             Mozilla Public License, v. 2.0
 	"""
 
-	NamedLoader.get_instance("dNG.pas.database.instances.KeyStore")
-	return last_return
-#
+	def __init__(self, value = "Nothing matched", _exception = None):
+	#
+		"""
+Constructor __init__(NothingMatchedException)
 
-def register_plugin():
-#
-	"""
-Register plugin hooks.
+:param value: Exception message value
+:param _exception: Inner exception
 
-:since: v0.1.00
-	"""
+:since: v0.1.01
+		"""
 
-	Hook.register("dNG.pas.Database.loadAll", load_all)
-#
-
-def unregister_plugin():
-#
-	"""
-Unregister plugin hooks.
-
-:since: v0.1.00
-	"""
-
-	Hook.unregister("dNG.pas.Database.loadAll", load_all)
+		ValueException.__init__(self, value, _exception)
+	#
 #
 
 ##j## EOF

@@ -23,9 +23,10 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 NOTE_END //n"""
 
-from sqlalchemy import BIGINT, Column, TEXT, VARCHAR
+from sqlalchemy import Column, TEXT, VARCHAR
 from uuid import uuid4 as uuid
 
+from dNG.pas.database.types.date_time import DateTime
 from .abstract import Abstract
 
 class KeyStore(Abstract):
@@ -61,11 +62,11 @@ keystore.id
 	"""
 keystore.key
 	"""
-	validity_start_date = Column(BIGINT, server_default = "0", nullable = False)
+	validity_start_date = Column(DateTime, default = 0, nullable = False)
 	"""
 keystore.validity_start_date
 	"""
-	validity_end_date = Column(BIGINT, server_default = "0", nullable = False)
+	validity_end_date = Column(DateTime, default = 0, nullable = False)
 	"""
 keystore.validity_end_date
 	"""

@@ -36,6 +36,7 @@ from dNG.pas.runtime.type_exception import TypeException
 from dNG.pas.runtime.value_exception import ValueException
 from .connection import Connection
 from .instance_iterator import InstanceIterator
+from .nothing_matched_exception import NothingMatchedException
 from .sort_definition import SortDefinition
 from .instances.abstract import Abstract
 
@@ -82,7 +83,7 @@ Database connection if bound
 		"""
 thread-local instance
 		"""
-		self.lock = ThreadLock()
+		self._lock = ThreadLock()
 		"""
 Thread safety lock
 		"""
@@ -121,9 +122,10 @@ python.org: Enter the runtime context related to this object.
 			#
 			elif (self.context_depth > 0): self.context_depth += 1
 
-			if (self.local.db_instance != None):
+			if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
+			elif (self.local.db_instance != None):
 			#
-				with self.lock:
+				with self._lock:
 				#
 					if (inspect(self.local.db_instance).detached): self._database.add(self.local.db_instance)
 				#
@@ -132,7 +134,7 @@ python.org: Enter the runtime context related to this object.
 		#
 		except Exception:
 		#
-			Connection._release()
+			self._cleanup_enter()
 			raise
 		#
 	#
@@ -164,7 +166,7 @@ python.org: Exit the runtime context related to this object.
 					if (exc_type == None and exc_value == None): self._database.rollback()
 				#
 
-				with self.lock: self._database = None
+				with self._lock: self._database = None
 			#
 		#
 
@@ -190,90 +192,19 @@ python.org: Called to create a new instance of class cls.
 		return _return
 	#
 
-	def data_get(self, *args):
+	def _cleanup_enter(self):
 	#
 		"""
-Return the requested attributes.
-
-:return: (dict) Values for the requested attributes; None for undefined ones
-:since:  v0.1.00
-		"""
-
-		with self:
-		#
-			_return = { }
-			for attribute in args: _return[attribute] = self._data_get(attribute)
-		#
-
-		return _return
-	#
-
-	def _data_get(self, attribute):
-	#
-		"""
-Return the data for the requested attribute.
-
-:param attribute: Requested attribute
-
-:return: (dict) Value for the requested attribute; None if undefined
-:since:  v0.1.00
-		"""
-
-		_return = None
-		if (self.local.db_instance != None): _return = (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._data_get_unknown(attribute))
-
-		return _return
-	#
-
-	def _data_get_unknown(self, attribute):
-	#
-		"""
-Return the data for the requested attribute not defined for this instance.
-
-:param attribute: Requested attribute
-
-:return: (dict) Value for the requested attribute; None if undefined
-:since:  v0.1.00
-		"""
-
-		return None
-	#
-
-	def data_is_none(self, *args):
-	#
-		"""
-Return true if at least one of the attributes is "None".
-
-:return: (bool) True if at least one of the attributes is "None"
-:since:  v0.1.00
-		"""
-
-		with self:
-		#
-			_return = False
-
-			for attribute in args:
-			#
-				if (self._data_get(attribute) == None):
-				#
-					_return = True
-					break
-				#
-			#
-		#
-
-		return _return
-	#
-
-	def data_set(self, **kwargs):
-	#
-		"""
-Sets values given as keyword arguments to this method.
+This method should be called for if exceptions in "__enter__" occur to
+cleanup database connections held by this instance.
 
 :since: v0.1.00
 		"""
 
-		raise NotImplementedException()
+		# pylint: disable=protected-access
+
+		self._database = None
+		Connection._release()
 	#
 
 	def _db_apply_sort_definition(self, query):
@@ -295,11 +226,10 @@ Apply the sort order to the given SQLAlchemy query instance.
 			#
 				if (hasattr(self.local.db_instance.__class__, sort_definition[0])):
 				#
-					_return = _return.order_by(
-						asc(getattr(self.local.db_instance.__class__, sort_definition[0]))
-						if (sort_definition[1] == SortDefinition.ASCENDING) else
-						desc(getattr(self.local.db_instance.__class__, sort_definition[0]))
-					)
+					_return = _return.order_by(asc(getattr(self.local.db_instance.__class__, sort_definition[0]))
+					                           if (sort_definition[1] == SortDefinition.ASCENDING) else
+					                           desc(getattr(self.local.db_instance.__class__, sort_definition[0]))
+					                          )
 				#
 			#
 		#
@@ -331,6 +261,58 @@ Deletes this entry from the database.
 		return _return
 	#
 
+	def _ensure_thread_local_instance(self, cls):
+	#
+		"""
+Check for an initialized SQLAlchemy database instance or create one.
+
+:since: v0.1.01
+		"""
+
+		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance == None):
+		#
+			self.local.db_instance = (None
+			                          if (self.is_reloadable()) else
+			                          cls()
+			                         )
+		#
+	#
+
+	def _get_data_attribute(self, attribute):
+	#
+		"""
+Return the data for the requested attribute.
+
+:param attribute: Requested attribute
+
+:return: (dict) Value for the requested attribute; None if undefined
+:since:  v0.1.00
+		"""
+
+		_return = None
+		if (self.local.db_instance != None): _return = (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._get_unknown_data_attribute(attribute))
+
+		return _return
+	#
+
+	def get_data_attributes(self, *args):
+	#
+		"""
+Return the requested attributes.
+
+:return: (dict) Values for the requested attributes; None for undefined ones
+:since:  v0.1.00
+		"""
+
+		with self:
+		#
+			_return = { }
+			for attribute in args: _return[attribute] = self._get_data_attribute(attribute)
+		#
+
+		return _return
+	#
+
 	def _get_db_instance(self):
 	#
 		"""
@@ -343,6 +325,20 @@ Returns the actual database entry instance.
 		with self: return self.local.db_instance
 	#
 
+	def _get_unknown_data_attribute(self, attribute):
+	#
+		"""
+Return the data for the requested attribute not defined for this instance.
+
+:param attribute: Requested attribute
+
+:return: (dict) Value for the requested attribute; None if undefined
+:since:  v0.1.00
+		"""
+
+		return None
+	#
+
 	def _insert(self):
 	#
 		"""
@@ -353,11 +349,37 @@ Insert the instance into the database.
 
 		# pylint: disable=maybe-no-member
 
-		with self.lock, Connection.get_instance() as database:
+		with self._lock, Connection.get_instance() as database:
 		#
 			instance_state = inspect(self.local.db_instance)
 			if (instance_state.transient): database.add(self.local.db_instance)
 		#
+	#
+
+	def is_data_attribute_none(self, *args):
+	#
+		"""
+Return true if at least one of the attributes is "None".
+
+:return: (bool) True if at least one of the attributes is "None"
+:since:  v0.1.00
+		"""
+
+		with self:
+		#
+			_return = False
+
+			for attribute in args:
+			#
+				if (self._get_data_attribute(attribute) == None):
+				#
+					_return = True
+					break
+				#
+			#
+		#
+
+		return _return
 	#
 
 	def is_known(self):
@@ -395,7 +417,7 @@ Reload instance data from the database.
 :since: v0.1.00
 		"""
 
-		with self.lock:
+		with self._lock:
 		#
 			if (self._database != None): self._reload()
 		#
@@ -409,7 +431,7 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		if (self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
+		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
 		self._database.refresh(self.local.db_instance)
 	#
 
@@ -423,6 +445,17 @@ Saves changes of the instance into the database.
 
 		if (self.is_known()): self._update()
 		else: self._insert()
+	#
+
+	def set_data_attributes(self, **kwargs):
+	#
+		"""
+Sets values given as keyword arguments to this method.
+
+:since: v0.1.00
+		"""
+
+		raise NotImplementedException()
 	#
 
 	def set_sort_definition(self, sort_definition):
@@ -509,7 +542,7 @@ Load instance by the given key value.
 :since:  v0.1.00
 			"""
 
-			return self.data_get(key)[key]
+			return self.get_data_attributes(key)[key]
 		#
 
 		return proxymethod
@@ -547,7 +580,7 @@ Load instance by the given criteria (AND condition is used).
 			#
 
 			with Connection.get_instance() as database: db_instance = database.query(entity.db_instance_class).filter(*criteria).first()
-			if (db_instance == None): raise ValueException("Encapsulated database instance not found for given criteria")
+			if (db_instance == None): raise NothingMatchedException("Encapsulated database instance not found for given criteria")
 
 			return entity.db_instance_class(db_instance)
 		#

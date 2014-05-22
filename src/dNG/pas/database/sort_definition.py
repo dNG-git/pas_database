@@ -49,7 +49,7 @@ Ascending sort direction
 Descending sort direction
 	"""
 
-	def __init__(self, sort_tuples = [ ]):
+	def __init__(self, sort_tuples = None):
 	#
 		"""
 Constructor __init__(SortDefinition)
@@ -61,6 +61,8 @@ Constructor __init__(SortDefinition)
 		"""
 List of tuples defining the attribute and sort direction
 		"""
+
+		if (sort_tuples == None): sort_tuples = [ ]
 
 		for sort_tuple in sort_tuples:
 		#
@@ -131,10 +133,9 @@ Prepends a sort definition to the current list.
 Validates the given sort direction.
 		"""
 
-		if (
-			direction != SortDefinition.ASCENDING and
-			direction != SortDefinition.DESCENDING
-		): raise ValueException("Sort definition given is not supported")
+		if (direction != SortDefinition.ASCENDING
+		    and direction != SortDefinition.DESCENDING
+		   ): raise ValueException("Sort definition given is not supported")
 	#
 #
 
