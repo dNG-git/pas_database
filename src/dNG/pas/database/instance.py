@@ -210,7 +210,7 @@ cleanup database connections held by this instance.
 	def _db_apply_sort_definition(self, query):
 	#
 		"""
-Apply the sort order to the given SQLAlchemy query instance.
+Applies the sort order to the given SQLAlchemy query instance.
 
 :param query: SQLAlchemy query instance
 
@@ -264,7 +264,7 @@ Deletes this entry from the database.
 	def _ensure_thread_local_instance(self, cls):
 	#
 		"""
-Check for an initialized SQLAlchemy database instance or create one.
+Checks for an initialized SQLAlchemy database instance or create one.
 
 :since: v0.1.01
 		"""
@@ -281,7 +281,7 @@ Check for an initialized SQLAlchemy database instance or create one.
 	def _get_data_attribute(self, attribute):
 	#
 		"""
-Return the data for the requested attribute.
+Returns the data for the requested attribute.
 
 :param attribute: Requested attribute
 
@@ -298,7 +298,7 @@ Return the data for the requested attribute.
 	def get_data_attributes(self, *args):
 	#
 		"""
-Return the requested attributes.
+Returns the requested attributes.
 
 :return: (dict) Values for the requested attributes; None for undefined ones
 :since:  v0.1.00
@@ -328,7 +328,7 @@ Returns the actual database entry instance.
 	def _get_unknown_data_attribute(self, attribute):
 	#
 		"""
-Return the data for the requested attribute not defined for this instance.
+Returns the data for the requested attribute not defined for this instance.
 
 :param attribute: Requested attribute
 
@@ -359,7 +359,7 @@ Insert the instance into the database.
 	def is_data_attribute_none(self, *args):
 	#
 		"""
-Return true if at least one of the attributes is "None".
+Returns true if at least one of the attributes is "None".
 
 :return: (bool) True if at least one of the attributes is "None"
 :since:  v0.1.00
@@ -536,53 +536,13 @@ alternatively the given default one.
 		def proxymethod(self):
 		#
 			"""
-Load instance by the given key value.
+Loads instance by the given key value.
 
 :return: (object) Instance object
 :since:  v0.1.00
 			"""
 
 			return self.get_data_attributes(key)[key]
-		#
-
-		return proxymethod
-	#
-
-	@staticmethod
-	def _wrap_loader(entity):
-	#
-		"""
-Wraps a "load" method to return the encapsulated database instance based on
-the given SQLAlchemy entity class.
-
-:return: (object) Proxy method
-:since:  v0.1.00
-		"""
-
-		# pylint: disable=star-args
-
-		def proxymethod(**kwargs):
-		#
-			"""
-Load instance by the given criteria (AND condition is used).
-
-:return: (object) Instance object
-:since:  v0.1.00
-			"""
-
-			if ((not hasattr(entity, "db_instance_class")) or entity.db_instance_class == None): raise TypeException("Given entity does not correctly define the encapsulated database instance.")
-			criteria = [ ]
-
-			for attribute in kwargs:
-			#
-				if (not hasattr(entity.db_instance_class, attribute)): raise ValueException("Given entity attribute is not defined.")
-				criteria.append(getattr(entity.db_instance_class, attribute) == kwargs[attribute])
-			#
-
-			with Connection.get_instance() as database: db_instance = database.query(entity.db_instance_class).filter(*criteria).first()
-			if (db_instance == None): raise NothingMatchedException("Encapsulated database instance not found for given criteria")
-
-			return entity.db_instance_class(db_instance)
 		#
 
 		return proxymethod
