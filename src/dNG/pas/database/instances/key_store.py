@@ -23,7 +23,8 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 NOTE_END //n"""
 
-from sqlalchemy import Column, TEXT, VARCHAR
+from sqlalchemy.schema import Column
+from sqlalchemy.types import TEXT, VARCHAR
 from uuid import uuid4 as uuid
 
 from dNG.pas.database.types.date_time import DateTime

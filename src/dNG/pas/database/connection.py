@@ -27,7 +27,7 @@ NOTE_END //n"""
 
 from os import path
 from random import randrange
-from sqlalchemy import engine_from_config
+from sqlalchemy.engine import engine_from_config
 from sqlalchemy.event import listen
 from sqlalchemy.orm.interfaces import EXT_CONTINUE
 from sqlalchemy.orm.mapper import configure_mappers, Mapper
