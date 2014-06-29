@@ -3,10 +3,6 @@
 ##j## BOF
 
 """
-Script to run "dNG.pas.loader.DbTool".
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -21,8 +17,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from dNG.pas.loader.db_tool import DbTool
 import sys

@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.types.DateTime
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from datetime import datetime
 from sqlalchemy.types import DateTime as _DateTime

@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.InstanceIterator
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from dNG.pas.database.connection import Connection
 from dNG.pas.runtime.iterator import Iterator

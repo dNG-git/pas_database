@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.Instance
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,12 +16,10 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from sqlalchemy.inspection import inspect
 from sqlalchemy.engine.result import ResultProxy
-from sqlalchemy.sql.expression import asc, desc
 from threading import local
 
 from dNG.pas.module.named_loader import NamedLoader
@@ -36,7 +30,6 @@ from dNG.pas.runtime.type_exception import TypeException
 from dNG.pas.runtime.value_exception import ValueException
 from .connection import Connection
 from .instance_iterator import InstanceIterator
-from .nothing_matched_exception import NothingMatchedException
 from .sort_definition import SortDefinition
 from .instances.abstract import Abstract
 
@@ -110,6 +103,8 @@ python.org: Enter the runtime context related to this object.
 
 		# pylint: disable=broad-except,maybe-no-member,protected-access
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
+
 		self._database = Connection.get_instance()
 		Connection._acquire()
 
@@ -149,6 +144,8 @@ python.org: Exit the runtime context related to this object.
 
 		# pylint: disable=broad-except,protected-access
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
+
 		if (self.context_depth > 0):
 		#
 			self.context_depth -= 1
@@ -162,7 +159,7 @@ python.org: Exit the runtime context related to this object.
 				#
 				except Exception as handled_exception:
 				#
-					if (self.log_handler != None): self.log_handler.error(handled_exception)
+					if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
 					if (exc_type == None and exc_value == None): self._database.rollback()
 				#
 
@@ -192,6 +189,42 @@ python.org: Called to create a new instance of class cls.
 		return _return
 	#
 
+	def _apply_db_sort_definition(self, query, context = None):
+	#
+		"""
+Applies the sort order to the given SQLAlchemy query instance.
+
+:param query: SQLAlchemy query instance
+:param context: Sort definition context
+
+:return: (object) Modified SQLAlchemy query instance
+:since:  v0.1.00
+		"""
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+		_return = query
+
+		sort_tuples = (self._db_sort_tuples
+		               if (len(self._db_sort_tuples) > 0) else
+		               self._get_default_sort_definition(context)
+		              )
+
+		with self:
+		#
+			for sort_definition in sort_tuples:
+			#
+				column = self._get_db_column(sort_definition[0])
+
+				_return = _return.order_by(column.asc()
+				                           if (sort_definition[1] == SortDefinition.ASCENDING) else
+				                           column.desc()
+				                          )
+			#
+		#
+
+		return _return
+	#
+
 	def _cleanup_enter(self):
 	#
 		"""
@@ -207,36 +240,6 @@ cleanup database connections held by this instance.
 		Connection._release()
 	#
 
-	def _db_apply_sort_definition(self, query):
-	#
-		"""
-Applies the sort order to the given SQLAlchemy query instance.
-
-:param query: SQLAlchemy query instance
-
-:return: (object) Modified SQLAlchemy query instance
-:since:  v0.1.00
-		"""
-
-		_return = query
-
-		with self:
-		#
-			for sort_definition in self._db_sort_tuples:
-			#
-				if (hasattr(self.local.db_instance.__class__, sort_definition[0])):
-				#
-					_return = _return.order_by(asc(getattr(self.local.db_instance.__class__, sort_definition[0]))
-					                           if (sort_definition[1] == SortDefinition.ASCENDING) else
-					                           desc(getattr(self.local.db_instance.__class__, sort_definition[0]))
-					                          )
-				#
-			#
-		#
-
-		return _return
-	#
-
 	def delete(self):
 	#
 		"""
@@ -246,6 +249,7 @@ Deletes this entry from the database.
 :since:  v0.1.00
 		"""
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = True
 
 		if (self.is_known()):
@@ -304,13 +308,35 @@ Returns the requested attributes.
 :since:  v0.1.00
 		"""
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
+		_return = { }
+
 		with self:
 		#
-			_return = { }
 			for attribute in args: _return[attribute] = self._get_data_attribute(attribute)
 		#
 
 		return _return
+	#
+
+	def _get_db_column(self, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute.
+
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column; None if undefined
+:since:  v0.1.00
+		"""
+
+		with self:
+		#
+			return (getattr(self.local.db_instance.__class__, attribute)
+			          if (hasattr(self.local.db_instance.__class__, attribute)) else
+			          self._get_unknown_db_column(attribute)
+			         )
+		#
 	#
 
 	def _get_db_instance(self):
@@ -325,6 +351,21 @@ Returns the actual database entry instance.
 		with self: return self.local.db_instance
 	#
 
+	def _get_default_sort_definition(self, context = None):
+	#
+		"""
+Returns the default sort definition list.
+
+:param context: Sort definition context
+
+:return: (list) Sort definition list
+:since:  v0.1.00
+		"""
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+		return [ ]
+	#
+
 	def _get_unknown_data_attribute(self, attribute):
 	#
 		"""
@@ -337,6 +378,21 @@ Returns the data for the requested attribute not defined for this instance.
 		"""
 
 		return None
+	#
+
+	def _get_unknown_db_column(self, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute not defined for
+this instance main entity.
+
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column
+:since:  v0.1.00
+		"""
+
+		raise ValueException("Given attribute '{0}' is not defined for this database instance".format(attribute))
 	#
 
 	def _insert(self):
@@ -417,6 +473,8 @@ Reload instance data from the database.
 :since: v0.1.00
 		"""
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
+
 		with self._lock:
 		#
 			if (self._database != None): self._reload()
@@ -443,6 +501,8 @@ Saves changes of the instance into the database.
 :since: v0.1.00
 		"""
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
+
 		if (self.is_known()): self._update()
 		else: self._insert()
 	#
@@ -461,11 +521,14 @@ Sets values given as keyword arguments to this method.
 	def set_sort_definition(self, sort_definition):
 	#
 		"""
-Returns the current sort definition list.
+Sets the sort definition list.
 
-:return: (list) Sort definition list
-:since:  v0.1.00
+:param sort_definition: Sort definition list
+
+:since: v0.1.00
 		"""
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
 		self._db_sort_tuples = sort_definition.get_list()

@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.data.text.KeyStore
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from random import randrange
 from time import time
@@ -31,6 +26,7 @@ from dNG.pas.data.binary import Binary
 from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
+from dNG.pas.database.nothing_matched_exception import NothingMatchedException
 from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
 from dNG.pas.runtime.io_exception import IOException
 from dNG.pas.runtime.type_exception import TypeException
@@ -111,8 +107,8 @@ Returns true if the KeyStore entry is active and valid.
 		#
 			timestamp = time()
 
-			_return = (self.local.db_instance.validity_start_date == 0 or self.local.db_instance.validity_start_date < timestamp)
-			if (_return and self.local.db_instance.validity_end_date != 0 and self.local.db_instance.validity_end_date < timestamp): _return = False
+			_return = (self.local.db_instance.validity_start_time == 0 or self.local.db_instance.validity_start_time < timestamp)
+			if (_return and self.local.db_instance.validity_end_time != 0 and self.local.db_instance.validity_end_time < timestamp): _return = False
 		#
 
 		return _return
@@ -148,8 +144,8 @@ Sets values given as keyword arguments to this method.
 		with self:
 		#
 			if ("key" in kwargs): self.local.db_instance.key = Binary.utf8(kwargs['key'])
-			if ("validity_start_date" in kwargs): self.local.db_instance.validity_start_date = kwargs['validity_start_date']
-			if ("validity_end_date" in kwargs): self.local.db_instance.validity_end_date = kwargs['validity_end_date']
+			if ("validity_start_time" in kwargs): self.local.db_instance.validity_start_time = kwargs['validity_start_time']
+			if ("validity_end_time" in kwargs): self.local.db_instance.validity_end_time = kwargs['validity_end_time']
 			if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
 		#
 	#
@@ -184,7 +180,7 @@ Load KeyStore entry from database.
 		#
 			if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
 			#
-				if (database.query(_DbKeyStore).filter(_DbKeyStore.validity_end_date <= int(time())).delete() > 0): database.optimize_random(_DbKeyStore)
+				if (database.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0): database.optimize_random(_DbKeyStore)
 			#
 
 			_return = (None if (db_instance == None) else KeyStore(db_instance))
@@ -206,7 +202,9 @@ Load KeyStore value by ID.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database: return KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.id == _id).first())
+		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.id == _id).first())
+		if (_return == None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
+		return _return
 	#
 
 	@staticmethod
@@ -221,7 +219,9 @@ Load KeyStore value by key.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database: return KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+		if (_return == None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
+		return _return
 	#
 #
 

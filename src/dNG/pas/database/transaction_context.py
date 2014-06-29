@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.TransactionContext
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from dNG.pas.data.logging.log_line import LogLine
 from .connection import Connection
@@ -106,7 +101,7 @@ python.org: Exit the runtime context related to this object.
 			#
 			except Exception as handled_exception:
 			#
-				if (LogLine != None): LogLine.error(handled_exception)
+				if (LogLine != None): LogLine.error(handled_exception, context = "pas_database")
 				if (exc_type == None and exc_value == None): self._database.rollback()
 			#
 		#

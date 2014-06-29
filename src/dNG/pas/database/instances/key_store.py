@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.instances.KeyStore
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from sqlalchemy.schema import Column
 from sqlalchemy.types import TEXT, VARCHAR
@@ -63,13 +58,13 @@ keystore.id
 	"""
 keystore.key
 	"""
-	validity_start_date = Column(DateTime, default = 0, nullable = False)
+	validity_start_time = Column(DateTime, default = 0, nullable = False)
 	"""
-keystore.validity_start_date
+keystore.validity_start_time
 	"""
-	validity_end_date = Column(DateTime, default = 0, nullable = False)
+	validity_end_time = Column(DateTime, default = 0, nullable = False)
 	"""
-keystore.validity_end_date
+keystore.validity_end_time
 	"""
 	value = Column(TEXT)
 	"""

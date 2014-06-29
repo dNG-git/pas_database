@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.Connection
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 # pylint: disable=import-error,no-name-in-module
 
@@ -155,7 +150,7 @@ Destructor __del__(Connection)
 				try: self.session.commit()
 				except Exception as handled_exception:
 				#
-					if (self.log_handler != None): self.log_handler.error(handled_exception)
+					if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
 				#
 				finally: Connection._release()
 			#
@@ -171,6 +166,8 @@ python.org: Enter the runtime context related to this object.
 
 :since: v0.1.00
 		"""
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		Connection._acquire()
 
@@ -205,6 +202,8 @@ python.org: Exit the runtime context related to this object.
 
 		# pylint: disable=broad-except
 
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
+
 		if (self.context_depth > 0):
 		# Thread safety
 			with self._lock:
@@ -222,7 +221,7 @@ python.org: Exit the runtime context related to this object.
 						#
 						except Exception as handled_exception:
 						#
-							if (self.log_handler != None): self.log_handler.error(handled_exception)
+							if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
 							if (exc_type == None and exc_value == None): self.rollback()
 						#
 					#
@@ -265,7 +264,7 @@ sqlalchemy.org: Begin a transaction on this Session.
 			else: self.session.begin(subtransactions = True)
 
 			self.transactions += 1
-			if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' started".format(self.transactions))
+			if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' started", self, self.transactions, context = "pas_database")
 		#
 	#
 
@@ -285,7 +284,7 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 				#
 					self.session.commit()
 
-					if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' committed".format(self.transactions))
+					if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' committed", self, self.transactions, context = "pas_database")
 
 					if (self.transactions < 2): self.transactions = -1
 					else: self.transactions -= 1
@@ -364,7 +363,7 @@ sqlalchemy.org: Rollback the current transaction in progress.
 
 					self.session.rollback()
 
-					if (self.log_handler != None): self.log_handler.debug("pas.database.Connection transaction '{0:d}' rolled back".format(self.transactions))
+					if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' rolled back", self, self.transactions, context = "pas_database")
 
 					if (self.transactions < 2): self.transactions = -1
 					else: self.transactions -= 1

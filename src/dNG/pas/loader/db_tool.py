@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.loader.DbTool
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from argparse import ArgumentParser
 
@@ -86,7 +81,7 @@ Callback for execution.
 			Hook.set_log_handler(self.log_handler)
 			NamedLoader.set_log_handler(self.log_handler)
 
-			self.log_handler.debug("#echo(__FILEPATH__)# -DbTool._on_run(args)- (#echo(__LINE__)#)")
+			self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
 		#
 
 		Hook.load("database")

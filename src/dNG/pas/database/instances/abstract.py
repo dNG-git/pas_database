@@ -2,10 +2,6 @@
 ##j## BOF
 
 """
-dNG.pas.database.instances.Abstract
-"""
-"""n// NOTE
-----------------------------------------------------------------------------
 direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
@@ -20,8 +16,7 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 ----------------------------------------------------------------------------
 #echo(pasDatabaseVersion)#
 #echo(__FILEPATH__)#
-----------------------------------------------------------------------------
-NOTE_END //n"""
+"""
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import reconstructor
