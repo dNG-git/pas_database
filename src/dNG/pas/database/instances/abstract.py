@@ -48,6 +48,10 @@ of a table or mapper for the class entirely.
 	"""
 Encapsulating SQLAlchemy database instance class name
 	"""
+	db_schema_version = None
+	"""
+Database schema version
+	"""
 
 	@reconstructor
 	def sa_reconstructor(self):

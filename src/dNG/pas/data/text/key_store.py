@@ -202,7 +202,7 @@ Load KeyStore value by ID.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.id == _id).first())
+		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).get(_id))
 		if (_return == None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
 	#

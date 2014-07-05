@@ -23,11 +23,12 @@ from argparse import ArgumentParser
 from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instances.abstract import Abstract
-from dNG.pas.loader.cli import Cli
+from dNG.pas.loader.interactive_cli import InteractiveCli
 from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.plugins.hook import Hook
+from dNG.pas.plugins.hook_context import HookContext
 
-class DbTool(Cli):
+class DbTool(InteractiveCli):
 #
 	"""
 Tool to work with the configured database and its tables.
@@ -53,12 +54,28 @@ Constructor __init__(DbTool)
 :since: v0.1.00
 		"""
 
-		Cli.__init__(self)
+		InteractiveCli.__init__(self)
+
+		self.cli_setup = False
+		"""
+True if this tool should handle the initial configuration.
+		"""
 
 		self.arg_parser = ArgumentParser()
+		self.arg_parser.add_argument("--applySchema", action = "store_true", dest = "apply_schema")
+		self.arg_parser.add_argument("-s", action = "store_true", dest = "cli_setup")
 
-		Cli.register_run_callback(self._on_run)
-		Cli.register_shutdown_callback(self._on_shutdown)
+		InteractiveCli.register_run_callback(self._on_run)
+		InteractiveCli.register_shutdown_callback(self._on_shutdown)
+	#
+
+	def is_cli_setup(self):
+	#
+		"""
+Returns true if this tool should handle the initial configuration.
+		"""
+
+		return self.cli_setup
 	#
 
 	def _on_run(self, args):
@@ -68,8 +85,6 @@ Callback for execution.
 
 :since: v1.0.0
 		"""
-
-		# pylint: disable=no-member
 
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
 		Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
@@ -84,12 +99,12 @@ Callback for execution.
 			self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
 		#
 
+		self.cli_setup = args.cli_setup
+
 		Hook.load("database")
 		Hook.register("dNG.pas.Status.stop", self.stop)
-		Hook.call("dNG.pas.Database.loadAll")
 
-		database = Connection.get_instance()
-		Abstract().metadata.create_all(database.get_bind())
+		if (args.apply_schema): self.run_apply_schema(args)
 	#
 
 	def _on_shutdown(self):
@@ -101,6 +116,26 @@ Callback for shutdown.
 		"""
 
 		Hook.call("dNG.pas.Status.onShutdown")
+	#
+
+	def run_apply_schema(self, args):
+	#
+		"""
+Callback for execution.
+
+:since: v1.0.0
+		"""
+
+		self.output_info("Loading database entities ...")
+
+		Hook.call("dNG.pas.Database.loadAll")
+
+		self.output_info("Applying schema ...")
+
+		database = Connection.get_instance()
+		with HookContext("dNG.pas.Database.applySchema"): Abstract().metadata.create_all(database.get_bind())
+
+		self.output_info("Process completed")
 	#
 
 	def stop(self, params = None, last_return = None):

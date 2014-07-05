@@ -18,17 +18,19 @@ http://www.direct-netware.de/redirect.py?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from sqlalchemy.schema import Column
-from sqlalchemy.types import TEXT, VARCHAR
+from time import time
 from uuid import uuid4 as uuid
+
+from sqlalchemy.schema import Column
+from sqlalchemy.types import BIGINT, VARCHAR
 
 from dNG.pas.database.types.date_time import DateTime
 from .abstract import Abstract
 
-class KeyStore(Abstract):
+class SchemaVersion(Abstract):
 #
 	"""
-Database based key-value store.
+Database table listing the current schema version.
 
 :author:     direct Netware Group
 :copyright:  (C) direct Netware Group - All rights reserved
@@ -41,11 +43,11 @@ Database based key-value store.
 
 	# pylint: disable=invalid-name
 
-	__tablename__ = "{0}_key_store".format(Abstract.get_table_prefix())
+	__tablename__ = "{0}_schema_version".format(Abstract.get_table_prefix())
 	"""
 SQLAlchemy table name
 	"""
-	db_instance_class = "dNG.pas.data.text.KeyStore"
+	db_instance_class = "dNG.pas.database.Schema"
 	"""
 Encapsulating SQLAlchemy database instance class name
 	"""
@@ -56,35 +58,32 @@ Database schema version
 
 	id = Column(VARCHAR(32), primary_key = True)
 	"""
-keystore.id
+schema_version.id
 	"""
-	key = Column(VARCHAR(32), nullable = False, unique = True)
+	name = Column(VARCHAR(255), index = True, nullable = False)
 	"""
-keystore.key
+schema_version.name
 	"""
-	validity_start_time = Column(DateTime, default = 0, nullable = False)
+	version = Column(BIGINT, nullable = False)
 	"""
-keystore.validity_start_time
+schema_version.version
 	"""
-	validity_end_time = Column(DateTime, default = 0, nullable = False)
+	applied = Column(DateTime, default = 0, nullable = False)
 	"""
-keystore.validity_end_time
-	"""
-	value = Column(TEXT)
-	"""
-keystore.value
+schema_version.applied
 	"""
 
 	def __init__(self, *args, **kwargs):
 	#
 		"""
-Constructor __init__(KeyStore)
+Constructor __init__(SchemaVersion)
 
 :since: v0.1.00
 		"""
 
 		Abstract.__init__(self, *args, **kwargs)
 		if (self.id == None): self.id = uuid().hex
+		if (self.applied == None): self.applied = int(time())
 	#
 #
 
