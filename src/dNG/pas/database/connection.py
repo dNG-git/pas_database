@@ -173,15 +173,7 @@ python.org: Enter the runtime context related to this object.
 
 		try:
 		#
-			with self._lock:
-			#
-				if ((self.context_depth + self.transactions) < 0):
-				#
-					self.begin()
-					self.context_depth = 1
-				#
-				elif (self.context_depth > 0): self.context_depth += 1
-			#
+			with self._lock: self.context_depth += 1
 		#
 		except Exception:
 		#
