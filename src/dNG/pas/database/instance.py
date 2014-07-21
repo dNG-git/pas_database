@@ -122,7 +122,13 @@ python.org: Enter the runtime context related to this object.
 			#
 				with self._lock:
 				#
-					if (inspect(self.local.db_instance).detached): self._database.add(self.local.db_instance)
+					instance_state = inspect(self.local.db_instance)
+
+					if (instance_state.detached):
+					#
+						if (instance_state.has_identity): self.local.db_instance = self._database.merge(self.local.db_instance)
+						else: self._database.add(self.local.db_instance)
+					#
 				#
 			#
 			elif (self.is_reloadable()): self.reload()
