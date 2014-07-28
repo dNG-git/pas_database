@@ -202,6 +202,8 @@ Load KeyStore value by ID.
 :since:  v0.1.00
 		"""
 
+		if (_id == None): raise NothingMatchedException("KeyStore ID is invalid")
+
 		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).get(_id))
 		if (_return == None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
@@ -218,6 +220,8 @@ Load KeyStore value by key.
 :return: (object) KeyStore instance on success
 :since:  v0.1.00
 		"""
+
+		if (key == None): raise NothingMatchedException("KeyStore key is invalid")
 
 		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
 		if (_return == None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))

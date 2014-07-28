@@ -605,13 +605,41 @@ alternatively the given default one.
 		def proxymethod(self):
 		#
 			"""
-Loads instance by the given key value.
+Returns the value of the corresponding attribute.
 
-:return: (object) Instance object
+:return: (mixed) Attribute value
 :since:  v0.1.00
 			"""
 
 			return self.get_data_attributes(key)[key]
+		#
+
+		return proxymethod
+	#
+
+	@staticmethod
+	def _wrap_setter(key):
+	#
+		"""
+Wraps a "set*" method to set the given database entry value.
+
+:param key: Key to create the "set*" method for
+
+:return: (object) Proxy method
+:since:  v0.1.00
+		"""
+
+		def proxymethod(self, _value):
+		#
+			"""
+Sets the value of the corresponding attribute.
+
+:param _value: Attribute value
+
+:since: v0.1.00
+			"""
+
+			self.set_data_attributes(key = _value)
 		#
 
 		return proxymethod

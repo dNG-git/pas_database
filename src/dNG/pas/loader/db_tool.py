@@ -23,6 +23,7 @@ from argparse import ArgumentParser
 from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instances.abstract import Abstract
+from dNG.pas.database.transaction_context import TransactionContext
 from dNG.pas.loader.interactive_cli import InteractiveCli
 from dNG.pas.module.named_loader import NamedLoader
 from dNG.pas.plugins.hook import Hook
@@ -128,12 +129,17 @@ Callback for execution.
 
 		self.output_info("Loading database entities ...")
 
-		Hook.call("dNG.pas.Database.loadAll")
+		with Connection.get_instance() as database:
+		#
+			Hook.call("dNG.pas.Database.loadAll")
 
-		self.output_info("Applying schema ...")
+			self.output_info("Applying schema ...")
 
-		database = Connection.get_instance()
-		with HookContext("dNG.pas.Database.applySchema"): Abstract().metadata.create_all(database.get_bind())
+			with TransactionContext(), HookContext("dNG.pas.Database.applySchema"):
+			#
+				Abstract().metadata.create_all(database.get_bind())
+			#
+		#
 
 		self.output_info("Process completed")
 	#

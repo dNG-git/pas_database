@@ -83,7 +83,7 @@ python.org: Return an iterator object.
 :since:  v0.1.00
 		"""
 
-		return (self.result if (self.instance_class == None) else self)
+		return (iter(self.result) if (self.instance_class == None) else self)
 	#
 
 	def __next__(self):

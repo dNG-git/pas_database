@@ -57,7 +57,6 @@ Constructor __init__(Schema)
 :since: v0.1.00
 		"""
 
-		if (db_instance == None): db_instance = _DbSchemaVersion()
 		Instance.__init__(self, db_instance)
 	#
 
@@ -76,6 +75,8 @@ Sets values given as keyword arguments to this method.
 
 :since: v0.1.00
 		"""
+
+		self._ensure_thread_local_instance(_DbSchemaVersion)
 
 		with self:
 		#
