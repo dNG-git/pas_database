@@ -629,17 +629,20 @@ Wraps a "set*" method to set the given database entry value.
 :since:  v0.1.00
 		"""
 
-		def proxymethod(self, _value):
+		def proxymethod(self, value):
 		#
 			"""
 Sets the value of the corresponding attribute.
 
-:param _value: Attribute value
+:param value: Attribute value
 
 :since: v0.1.00
 			"""
 
-			self.set_data_attributes(key = _value)
+			# pylint: disable=star-args
+
+			attribute = { key: value }
+			self.set_data_attributes(**attribute)
 		#
 
 		return proxymethod
