@@ -110,28 +110,19 @@ python.org: Enter the runtime context related to this object.
 
 		try:
 		#
-			if ((self.context_depth + self._database.get_transaction_depth()) < 1):
+			with self._lock:
 			#
-				self._database.begin()
-				self.context_depth = 1
-			#
-			elif (self.context_depth > 0): self.context_depth += 1
-
-			if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
-			elif (self.local.db_instance != None):
-			#
-				with self._lock:
+				if ((self.context_depth + self._database.get_transaction_depth()) < 1):
 				#
-					instance_state = inspect(self.local.db_instance)
-
-					if (instance_state.detached):
-					#
-						if (instance_state.has_identity): self.local.db_instance = self._database.merge(self.local.db_instance)
-						else: self._database.add(self.local.db_instance)
-					#
+					self._database.begin()
+					self.context_depth = 1
 				#
+				elif (self.context_depth > 0): self.context_depth += 1
+
+				if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
+				elif (self.local.db_instance != None): self._ensure_attached_instance()
+				elif (self.is_reloadable()): self.reload()
 			#
-			elif (self.is_reloadable()): self.reload()
 		#
 		except Exception:
 		#
@@ -145,7 +136,8 @@ python.org: Enter the runtime context related to this object.
 		"""
 python.org: Exit the runtime context related to this object.
 
-:since: v0.1.00
+:return: (bool) True to suppress exceptions
+:since:  v0.1.00
 		"""
 
 		# pylint: disable=broad-except,protected-access
@@ -153,27 +145,34 @@ python.org: Exit the runtime context related to this object.
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (self.context_depth > 0):
-		#
-			self.context_depth -= 1
-
-			if (self.context_depth < 1):
+		# Thread safety
+			with self._lock:
 			#
-				try:
+				if (self.context_depth > 0):
 				#
-					if (exc_type == None and exc_value == None): self._database.commit()
-					else: self._database.rollback()
-				#
-				except Exception as handled_exception:
-				#
-					if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
-					if (exc_type == None and exc_value == None): self._database.rollback()
-				#
+					self.context_depth -= 1
 
-				with self._lock: self._database = None
+					if (self.context_depth < 1):
+					#
+						try:
+						#
+							if (exc_type == None and exc_value == None): self._database.commit()
+							else: self._database.rollback()
+						#
+						except Exception as handled_exception:
+						#
+							if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
+							if (exc_type == None and exc_value == None): self._database.rollback()
+						#
+
+						self._database = None
+					#
+				#
 			#
 		#
 
 		Connection._release()
+		return False
 	#
 
 	def __new__(cls, *args, **kwargs):
@@ -269,6 +268,25 @@ Deletes this entry from the database.
 		else: _return = False
 
 		return _return
+
+	def _ensure_attached_instance(self):
+	#
+		"""
+Checks the SQLAlchemy database instance to be attached to an session.
+
+:since: v0.1.01
+		"""
+
+		with self._lock:
+		#
+			instance_state = inspect(self.local.db_instance)
+
+			if (instance_state.detached):
+			#
+				if (instance_state.has_identity): self.local.db_instance = self._database.merge(self.local.db_instance)
+				else: self._database.add(self.local.db_instance)
+			#
+		#
 	#
 
 	def _ensure_thread_local_instance(self, cls):
@@ -411,10 +429,10 @@ Insert the instance into the database.
 
 		# pylint: disable=maybe-no-member
 
-		with self._lock, Connection.get_instance() as database:
+		with self:
 		#
 			instance_state = inspect(self.local.db_instance)
-			if (instance_state.transient): database.add(self.local.db_instance)
+			if (instance_state.transient): self._database.add(self.local.db_instance)
 		#
 	#
 

@@ -84,7 +84,8 @@ python.org: Enter the runtime context related to this object.
 		"""
 python.org: Exit the runtime context related to this object.
 
-:since: v0.1.00
+:return: (bool) True to suppress exceptions
+:since:  v0.1.00
 		"""
 
 		# pylint: disable=broad-except,protected-access
@@ -107,6 +108,7 @@ python.org: Exit the runtime context related to this object.
 		#
 
 		Connection._release()
+		return False
 	#
 #
 

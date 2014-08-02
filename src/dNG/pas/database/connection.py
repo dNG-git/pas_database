@@ -85,10 +85,6 @@ Constructor __init__(Connection)
 :since: v0.1.00
 		"""
 
-		self.context_depth = 0
-		"""
-Runtime context depth
-		"""
 		self._lock = ThreadLock()
 		"""
 Thread safety lock
@@ -170,17 +166,6 @@ python.org: Enter the runtime context related to this object.
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		Connection._acquire()
-
-		try:
-		#
-			with self._lock: self.context_depth += 1
-		#
-		except Exception:
-		#
-			Connection._release()
-			raise
-		#
-
 		return self
 	#
 
@@ -189,39 +174,16 @@ python.org: Enter the runtime context related to this object.
 		"""
 python.org: Exit the runtime context related to this object.
 
-:since: v0.1.00
+:return: (bool) True to suppress exceptions
+:since:  v0.1.00
 		"""
 
 		# pylint: disable=broad-except
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
-		if (self.context_depth > 0):
-		# Thread safety
-			with self._lock:
-			#
-				if (self.context_depth > 0):
-				#
-					self.context_depth -= 1
-
-					if (self.context_depth < 1):
-					#
-						try:
-						#
-							if (exc_type == None and exc_value == None): self.commit()
-							else: self.rollback()
-						#
-						except Exception as handled_exception:
-						#
-							if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
-							if (exc_type == None and exc_value == None): self.rollback()
-						#
-					#
-				#
-			#
-		#
-
 		Connection._release()
+		return False
 	#
 
 	def __getattr__(self, name):
