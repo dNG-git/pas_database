@@ -129,7 +129,7 @@ Callback for execution.
 
 		self.output_info("Loading database entities ...")
 
-		with Connection.get_instance() as database:
+		with Connection.get_instance() as connection:
 		#
 			Hook.call("dNG.pas.Database.loadAll")
 
@@ -137,7 +137,7 @@ Callback for execution.
 
 			with TransactionContext(), HookContext("dNG.pas.Database.applySchema"):
 			#
-				Abstract().metadata.create_all(database.get_bind())
+				Abstract().metadata.create_all(connection.get_bind())
 			#
 		#
 

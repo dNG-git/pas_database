@@ -71,7 +71,13 @@ instance
 Instance class encapsulating the database instance
 		"""
 
-		with Connection.get_instance() as database: self.result = (list(database.query(entity).instances(cursor)) if (buffered) else database.query(entity).instances(cursor))
+		with Connection.get_instance() as connection:
+		#
+			self.result = (list(connection.query(entity).instances(cursor))
+			               if (buffered) else
+			               connection.query(entity).instances(cursor)
+			              )
+		#
 	#
 
 	def __iter__(self):

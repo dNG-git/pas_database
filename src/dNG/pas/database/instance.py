@@ -60,17 +60,9 @@ Constructor __init__(Instance)
 :since: v0.1.00
 		"""
 
-		self.context_depth = 0
+		self._db_sort_definition = None
 		"""
-Runtime context depth
-		"""
-		self._db_sort_tuples = [ ]
-		"""
-List of tuples defining the attribute and sort direction
-		"""
-		self._database = None
-		"""
-Database connection if bound
+Sort definition instance
 		"""
 		self.local = local()
 		"""
@@ -105,22 +97,23 @@ python.org: Enter the runtime context related to this object.
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
-		self._database = Connection.get_instance()
-		Connection._acquire()
-
 		try:
 		#
 			with self._lock:
 			#
-				if ((self.context_depth + self._database.get_transaction_depth()) < 1):
-				#
-					self._database.begin()
-					self.context_depth = 1
-				#
-				elif (self.context_depth > 0): self.context_depth += 1
+				if (not hasattr(self.local, "context_depth")): self.local.context_depth = 0
 
-				if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
-				elif (self.local.db_instance != None): self._ensure_attached_instance()
+				if (self.local.context_depth < 1):
+				#
+					Connection._acquire()
+					self.local.connection = Connection.get_instance()
+				#
+
+				self.local.context_depth += 1
+
+				if (hasattr(self.local, "db_instance")
+				    and self.local.db_instance != None
+				   ): self._ensure_attached_instance()
 				elif (self.is_reloadable()): self.reload()
 			#
 		#
@@ -144,34 +137,35 @@ python.org: Exit the runtime context related to this object.
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
-		if (self.context_depth > 0):
+		if (self.local.context_depth > 0):
 		# Thread safety
 			with self._lock:
 			#
-				if (self.context_depth > 0):
+				if (self.local.context_depth > 0):
 				#
-					self.context_depth -= 1
+					self.local.context_depth -= 1
 
-					if (self.context_depth < 1):
+					if (self.local.context_depth < 1 and self.wrapped_transaction):
 					#
 						try:
 						#
-							if (exc_type == None and exc_value == None): self._database.commit()
-							else: self._database.rollback()
+							if (exc_type == None and exc_value == None): self.local.connection.commit()
+							else: self.local.connection.rollback()
 						#
 						except Exception as handled_exception:
 						#
 							if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
-							if (exc_type == None and exc_value == None): self._database.rollback()
+							if (exc_type == None and exc_value == None): self.local.connection.rollback()
 						#
 
-						self._database = None
+						self.wrapped_transaction = False
 					#
+
+					if (self.local.context_depth < 1): Connection._release()
 				#
 			#
 		#
 
-		Connection._release()
 		return False
 	#
 
@@ -209,24 +203,12 @@ Applies the sort order to the given SQLAlchemy query instance.
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = query
 
-		sort_tuples = (self._db_sort_tuples
-		               if (len(self._db_sort_tuples) > 0) else
-		               self._get_default_sort_definition(context)
-		              )
+		sort_definition = (self._get_default_sort_definition(context)
+		                   if (self._db_sort_definition == None) else
+		                   self._db_sort_definition
+		                  )
 
-		with self:
-		#
-			for sort_definition in sort_tuples:
-			#
-				column = self._get_db_column(sort_definition[0])
-
-				_return = _return.order_by(column.asc()
-				                           if (sort_definition[1] == SortDefinition.ASCENDING) else
-				                           column.desc()
-				                          )
-			#
-		#
-
+		if (sort_definition != None): _return = sort_definition.apply(self, query)
 		return _return
 	#
 
@@ -241,8 +223,12 @@ cleanup database connections held by this instance.
 
 		# pylint: disable=protected-access
 
-		self._database = None
-		Connection._release()
+		if (self.local.context_depth < 1):
+		#
+			Connection._release()
+			self.local.connection = None
+		#
+		else: self.local.context_depth -= 1
 	#
 
 	def delete(self):
@@ -261,7 +247,9 @@ Deletes this entry from the database.
 		#
 			with self:
 			#
-				self._database.delete(self.local.db_instance)
+				self._ensure_transaction_context()
+
+				self.local.connection.delete(self.local.db_instance)
 				self.local.db_instance = None
 			#
 		#
@@ -283,8 +271,36 @@ Checks the SQLAlchemy database instance to be attached to an session.
 
 			if (instance_state.detached):
 			#
-				if (instance_state.has_identity): self.local.db_instance = self._database.merge(self.local.db_instance)
-				else: self._database.add(self.local.db_instance)
+				if (instance_state.has_identity):
+				#
+					self.local.db_instance = self.local.connection.merge(self.local.db_instance,
+					                                                     load = (not instance_state.persistent)
+					                                                    )
+				#
+				else: self.local.connection.add(self.local.db_instance)
+			#
+		#
+	#
+
+	def _ensure_transaction_context(self):
+	#
+		"""
+Checks for an active transaction or begins one.
+
+:since: v0.1.01
+		"""
+
+		# pylint: disable=broad-except,maybe-no-member,protected-access
+
+		if (self.local.connection.get_transaction_depth() < 1):
+		#
+			with self._lock:
+			# Thread safety
+				if (self.local.connection.get_transaction_depth() < 1):
+				#
+					self.local.connection.begin()
+					self.wrapped_transaction = True
+				#
 			#
 		#
 	#
@@ -317,10 +333,10 @@ Returns the data for the requested attribute.
 :since:  v0.1.00
 		"""
 
-		_return = None
-		if (self.local.db_instance != None): _return = (getattr(self.local.db_instance, attribute) if (hasattr(self.local.db_instance, attribute)) else self._get_unknown_data_attribute(attribute))
-
-		return _return
+		return (getattr(self.local.db_instance, attribute)
+		        if (hasattr(self.local.db_instance, attribute)) else
+		        self._get_unknown_data_attribute(attribute)
+		       )
 	#
 
 	def get_data_attributes(self, *args):
@@ -357,9 +373,9 @@ Returns the SQLAlchemy column for the requested attribute.
 		with self:
 		#
 			return (getattr(self.local.db_instance.__class__, attribute)
-			          if (hasattr(self.local.db_instance.__class__, attribute)) else
-			          self._get_unknown_db_column(attribute)
-			         )
+			        if (hasattr(self.local.db_instance.__class__, attribute)) else
+			        self._get_unknown_db_column(attribute)
+			       )
 		#
 	#
 
@@ -382,12 +398,12 @@ Returns the default sort definition list.
 
 :param context: Sort definition context
 
-:return: (list) Sort definition list
+:return: (object) Sort definition
 :since:  v0.1.00
 		"""
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
-		return [ ]
+		return SortDefinition()
 	#
 
 	def _get_unknown_data_attribute(self, attribute):
@@ -429,11 +445,7 @@ Insert the instance into the database.
 
 		# pylint: disable=maybe-no-member
 
-		with self:
-		#
-			instance_state = inspect(self.local.db_instance)
-			if (instance_state.transient): self._database.add(self.local.db_instance)
-		#
+		if (inspect(self.local.db_instance).transient): self.local.connection.add(self.local.db_instance)
 	#
 
 	def is_data_attribute_none(self, *args):
@@ -473,7 +485,7 @@ Returns true if the instance is already saved in the database.
 
 		# pylint: disable=maybe-no-member
 
-		with self: return inspect(self.local.db_instance).has_identity
+		return inspect(self.local.db_instance).has_identity
 	#
 
 	def is_reloadable(self):
@@ -501,7 +513,7 @@ Reload instance data from the database.
 
 		with self._lock:
 		#
-			if (self._database != None): self._reload()
+			if (hasattr(self.local, "connection") and self.local.connection != None): self._reload()
 		#
 	#
 
@@ -513,8 +525,8 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
-		self._database.refresh(self.local.db_instance)
+		if (self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
+		self.local.connection.refresh(self.local.db_instance)
 	#
 
 	def save(self):
@@ -527,8 +539,13 @@ Saves changes of the instance into the database.
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
 
-		if (self.is_known()): self._update()
-		else: self._insert()
+		with self:
+		#
+			self._ensure_transaction_context()
+
+			if (self.is_known()): self._update()
+			else: self._insert()
+		#
 	#
 
 	def set_data_attributes(self, **kwargs):
@@ -555,7 +572,7 @@ Sets the sort definition list.
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
-		self._db_sort_tuples = sort_definition.get_list()
+		self._db_sort_definition = sort_definition
 	#
 
 	def _update(self):

@@ -70,7 +70,7 @@ thread-local instance
 	"""
 	_sa_sessionmaker = None
 	"""
-Scoped database session
+SQLAlchemy database session constructor
 	"""
 	_serialized_lock = ThreadLock()
 	"""
@@ -85,6 +85,10 @@ Constructor __init__(Connection)
 :since: v0.1.00
 		"""
 
+		self.context_depth = 0
+		"""
+Connection context depth
+		"""
 		self._lock = ThreadLock()
 		"""
 Thread safety lock
@@ -108,7 +112,11 @@ Number of active transactions
 		if (Connection._sa_sessionmaker == None):
 		#
 			engine = engine_from_config(Connection._local.settings, prefix = "pas_database_sqlalchemy_", strategy = "threadlocal")
-			Connection._sa_sessionmaker = (sessionmaker(engine, autoflush = False) if (Connection._local.serialized) else sessionmaker(engine))
+
+			Connection._sa_sessionmaker = (sessionmaker(engine, autoflush = False)
+			                               if (Connection.is_serialized()) else
+			                               sessionmaker(engine)
+			                              )
 		#
 
 		self.session = Connection._sa_sessionmaker()
@@ -134,21 +142,13 @@ Destructor __del__(Connection)
 :since: v0.1.00
 		"""
 
-		# pylint: disable=broad-except
-
 		if (self.session != None):
-		# SQLAlchemy starts the most outer transaction itself by default
-			if (self.transactions < 0):
+		#
+			if (self.log_handler != None):
 			#
-				Connection._ensure_thread_local()
-				Connection._acquire()
-
-				try: self.session.commit()
-				except Exception as handled_exception:
-				#
-					if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
-				#
-				finally: Connection._release()
+				if (len(self.session.deleted) > 0): self.log_handler.warning("{0!r} has deleted instances to be rolled back", self, context = "pas_database")
+				if (len(self.session.dirty) > 0): self.log_handler.warning("{0!r} has dirty instances to be rolled back", self, context = "pas_database")
+				if (len(self.session.new) > 0): self.log_handler.warning("{0!r} has new instances to be ignored", self, context = "pas_database")
 			#
 
 			self.session.close()
@@ -166,6 +166,9 @@ python.org: Enter the runtime context related to this object.
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		Connection._acquire()
+
+		self.context_depth += 1
+
 		return self
 	#
 
@@ -182,7 +185,20 @@ python.org: Exit the runtime context related to this object.
 
 		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
+		self.context_depth -= 1
+
+		if (Connection.is_serialized()
+		    and self.context_depth < 1
+		    and self.get_transaction_depth() < 1
+		   ):
+		#
+			if (exc_type == None and exc_value == None): self.session.commit()
+			else: self.session.rollback()
+		#
+
+
 		Connection._release()
+
 		return False
 	#
 
@@ -336,7 +352,7 @@ threads at once (serialized mode).
 :since: v0.1.00
 		"""
 
-		if (Connection._local.serialized): Connection._serialized_lock.acquire()
+		if (Connection.is_serialized()): Connection._serialized_lock.acquire()
 	#
 
 	@staticmethod
@@ -461,7 +477,7 @@ Releases a previously acquired lock.
 :since: v0.1.00
 		"""
 
-		if (Connection._local.serialized): Connection._serialized_lock.release()
+		if (Connection.is_serialized()): Connection._serialized_lock.release()
 	#
 
 	@staticmethod

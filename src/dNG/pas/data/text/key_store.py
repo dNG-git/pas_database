@@ -27,6 +27,7 @@ from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
 from dNG.pas.database.nothing_matched_exception import NothingMatchedException
+from dNG.pas.database.transaction_context import TransactionContext
 from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
 from dNG.pas.runtime.io_exception import IOException
 from dNG.pas.runtime.type_exception import TypeException
@@ -122,15 +123,12 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		with self._lock:
+		if (self.local.db_instance == None):
 		#
-			if (self.local.db_instance == None):
-			#
-				if (self.db_id == None): raise IOException("Database instance is not reloadable.")
-				self.local.db_instance = self._database.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
-			#
-			else: Instance._reload(self)
+			if (self.db_id == None): raise IOException("Database instance is not reloadable.")
+			self.local.db_instance = self.local.connection.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
 		#
+		else: Instance._reload(self)
 	#
 
 	def set_data_attributes(self, **kwargs):
@@ -176,11 +174,17 @@ Load KeyStore entry from database.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as database:
+		with Connection.get_instance() as connection:
 		#
 			if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
 			#
-				if (database.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0): database.optimize_random(_DbKeyStore)
+				with TransactionContext():
+				#
+					if (connection.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0):
+					#
+						connection.optimize_random(_DbKeyStore)
+					#
+				#
 			#
 
 			_return = (None if (db_instance == None) else KeyStore(db_instance))
@@ -204,7 +208,7 @@ Load KeyStore value by ID.
 
 		if (_id == None): raise NothingMatchedException("KeyStore ID is invalid")
 
-		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).get(_id))
+		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).get(_id))
 		if (_return == None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
 	#
@@ -223,7 +227,7 @@ Load KeyStore value by key.
 
 		if (key == None): raise NothingMatchedException("KeyStore key is invalid")
 
-		with Connection.get_instance() as database: _return = KeyStore._load(database.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
 		if (_return == None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
 		return _return
 	#

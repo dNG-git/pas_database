@@ -68,16 +68,34 @@ List of tuples defining the attribute and sort direction
 		#
 	#
 
-	def get_list(self):
+	def apply(self, instance, query):
 	#
 		"""
-Returns the current sort definition list.
+Applies the sort order to the given SQLAlchemy query instance.
 
-:return: (list) Sort definition list
+:param instance: Database instance
+:param query: SQLAlchemy query instance
+
+:return: (object) Modified SQLAlchemy query instance
 :since:  v0.1.00
 		"""
 
-		return self.sort_tuples
+		_return = query
+
+		for sort_definition in self.sort_tuples:
+		#
+			column = (instance._get_db_column(sort_definition[0])
+			          if (hasattr(instance, "_get_db_column")) else
+			          getattr(instance, sort_definition[0])
+			         )
+
+			_return = _return.order_by(column.asc()
+			                           if (sort_definition[1] == SortDefinition.ASCENDING) else
+			                           column.desc()
+			                          )
+		#
+
+		return _return
 	#
 
 	def append(self, attribute, direction):
@@ -88,11 +106,14 @@ Appends a sort definition to the current list.
 :param attribute: Database entity attribute
 :param direction: Sort direction
 
-:since: v0.1.00
+:return: (object) SortDefinition instance
+:since:  v0.1.00
 		"""
 
 		SortDefinition.validate_sort_direction(direction)
 		self.sort_tuples.append(( attribute, direction ))
+
+		return self
 	#
 
 	def clear(self):
@@ -114,11 +135,14 @@ Prepends a sort definition to the current list.
 :param attribute: Database entity attribute
 :param direction: Sort direction
 
-:since: v0.1.00
+:return: (object) SortDefinition instance
+:since:  v0.1.00
 		"""
 
 		SortDefinition.validate_sort_direction(direction)
 		self.sort_tuples.insert(0, ( attribute, direction ))
+
+		return self
 	#
 
 	@staticmethod
@@ -128,9 +152,7 @@ Prepends a sort definition to the current list.
 Validates the given sort direction.
 		"""
 
-		if (direction != SortDefinition.ASCENDING
-		    and direction != SortDefinition.DESCENDING
-		   ): raise ValueException("Sort definition given is not supported")
+		if (direction not in ( SortDefinition.ASCENDING, SortDefinition.DESCENDING )): raise ValueException("Sort definition given is not supported")
 	#
 #
 

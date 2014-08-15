@@ -190,9 +190,9 @@ Load the schema entry with the highest version for the given name.
 
 		_return = None
 
-		with Connection.get_instance() as database:
+		with Connection.get_instance() as connection:
 		#
-			db_query = database.query(_DbSchemaVersion).filter(_DbSchemaVersion.name == name)
+			db_query = connection.query(_DbSchemaVersion).filter(_DbSchemaVersion.name == name)
 			db_query = db_query.order_by(_DbSchemaVersion.version.desc()).limit(1)
 			db_instance = db_query.first()
 

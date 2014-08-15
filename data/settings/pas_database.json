@@ -6,6 +6,10 @@
 # unsupported JSON parser.
 
 {
+ # Deactivate threading for serialized access to the underlying database.
+ # This is required for SQLite databases.
+ # "pas_database_threaded": false,
+
  # Database URL given to SQLAlchemy.
  # http://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine
  # "pas_database_url": "sqlite:///data/db.sqlite3"
