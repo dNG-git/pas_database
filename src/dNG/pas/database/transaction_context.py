@@ -102,21 +102,23 @@ python.org: Exit the runtime context related to this object.
 		#
 			try:
 			#
-				if (exc_type == None and exc_value == None): self.connection.commit()
-				else: self.connection.rollback()
-
 				self.context_depth -= 1
 
-				if (self.context_depth < 1):
-				#
-					self.connection = None
-					Connection._release()
-				#
+				if (exc_type == None and exc_value == None): self.connection.commit()
+				else: self.connection.rollback()
 			#
 			except Exception as handled_exception:
 			#
 				if (LogLine != None): LogLine.error(handled_exception, context = "pas_database")
 				if (exc_type == None and exc_value == None): self.connection.rollback()
+			#
+			finally:
+			#
+				if (self.context_depth < 1):
+				#
+					self.connection = None
+					Connection._release()
+				#
 			#
 		#
 

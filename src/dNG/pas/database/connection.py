@@ -196,7 +196,6 @@ python.org: Exit the runtime context related to this object.
 			else: self.session.rollback()
 		#
 
-
 		Connection._release()
 
 		return False

@@ -29,11 +29,13 @@ from dNG.pas.data.logging.log_line import LogLine
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instances.abstract import Abstract as _DbAbstract
 from dNG.pas.database.instances.schema_version import SchemaVersion as _DbSchemaVersion
+from dNG.pas.loader.interactive_cli import InteractiveCli
 from dNG.pas.plugins.hook_context import HookContext
-from dNG.pas.runtime.not_implemented_exception import NotImplementedException
+from dNG.pas.runtime.io_exception import IOException
 from dNG.pas.runtime.type_exception import TypeException
 from .instance import Instance
 from .nothing_matched_exception import NothingMatchedException
+from .transaction_context import TransactionContext
 
 class Schema(Instance):
 #
@@ -47,6 +49,15 @@ The "Schema" class provides methods to handle versions and upgrades.
 :since:      v0.1.00
 :license:    http://www.direct-netware.de/redirect.py?licenses;mpl2
              Mozilla Public License, v. 2.0
+	"""
+
+	RE_ESCAPED = re.compile("(\\\\+)$")
+	"""
+RegExp to find escape characters
+	"""
+	RE_SQL_COMMENT_LINE = re.compile("^\\s*\\-\\-.*$", re.M)
+	"""
+Comments in (invalid) JSON setting files are replaced before getting parsed.
 	"""
 
 	def __init__(self, db_instance = None):
@@ -98,6 +109,8 @@ class.
 :since: v0.1.00
 		"""
 
+		# pylint: disable=broad-except
+
 		if (instance_class == None
 		    or (not issubclass(instance_class, _DbAbstract))
 		    or instance_class.db_schema_version == None
@@ -105,7 +118,7 @@ class.
 
 		instance_class_name = instance_class.__name__
 
-		with Connection.get_instance(), HookContext("dNG.pas.database.{0}.applySchema".format(instance_class_name)):
+		with Connection.get_instance() as connection, HookContext("dNG.pas.database.{0}.applySchema".format(instance_class_name)):
 		#
 			schema_directory_path = path.join(Settings.get("path_data"),
 			                                  "database",
@@ -146,16 +159,29 @@ class.
 				if (current_version < target_version):
 				#
 					LogLine.info("pas.Database will upgrade schema '{0}' from version {1:d} to {2:d}".format(instance_class_name, current_version, target_version))
-					schema_versions = (version for version in range(current_version, 1 + target_version) if "schema_{0:d}.sql".format(version) in schema_version_files)
+					schema_versions = (version for version in range(current_version + 1, target_version + 1) if "schema_{0:d}.sql".format(version) in schema_version_files)
 
-					for schema_version in schema_versions:
+					try:
 					#
-						Schema._apply_sql_file(schema_version_files["schema_{0:d}.sql".format(schema_version)])
-						LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, target_version))
+						with TransactionContext():
+						#
+							for schema_version in schema_versions:
+							#
+								Schema._apply_sql_file(connection, schema_version_files["schema_{0:d}.sql".format(schema_version)])
+								LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, target_version))
 
-						schema = Schema()
-						schema.set_data_attributes(name = instance_class_name, version = schema_version)
-						schema.save()
+								schema = Schema()
+								schema.set_data_attributes(name = instance_class_name, version = schema_version)
+								schema.save()
+							#
+						#
+					#
+					except Exception:
+					#
+						cli = InteractiveCli.get_instance()
+						if (isinstance(cli, InteractiveCli)): cli.output_error("An error occurred updating the database schema '{0}'".format(instance_class_name))
+
+						raise
 					#
 				#
 			#
@@ -163,17 +189,70 @@ class.
 	#
 
 	@staticmethod
-	def _apply_sql_file(filepath):
+	def _apply_sql_command(connection, sql_command):
+	#
+		"""
+Applies the given SQL command to the database connection.
+
+:param connection: Database connection
+:param sql_command: Database specific SQL command
+
+:since: v0.1.01
+		"""
+
+		connection.get_bind().execute(sql_command)
+	#
+
+	@staticmethod
+	def _apply_sql_file(connection, file_pathname):
 	#
 		"""
 Applies the given SQL file.
 
-:param filepath: Database specific SQL file
+:param connection: Database connection
+:param file_pathname: Database specific SQL file
 
 :since: v0.1.00
 		"""
 
-		raise NotImplementedException()
+		file_object = File()
+
+		if (file_object.open(file_pathname, True, "r")):
+		#
+			file_content = Binary.str(file_object.read())
+			file_object.close()
+		#
+		else: raise IOException("Schema file given is invalid")
+
+		file_content = file_content.replace("__db_prefix__", _DbAbstract.get_table_prefix())
+		file_content = Schema.RE_SQL_COMMENT_LINE.sub("", file_content)
+
+		current_sql_command = ""
+		sql_commands = file_content.split(";")
+
+		for sql_command in sql_commands:
+		#
+			re_result = Schema.RE_ESCAPED.search(sql_command)
+
+			if (re_result != None
+			    and (len(re_result.group(1)) % 2) == 1
+			   ): current_sql_command += sql_command
+			else:
+			#
+				current_sql_command = (sql_command
+				                       if (current_sql_command == "") else
+				                       current_sql_command + sql_command
+				                      )
+
+				current_sql_command = current_sql_command.strip()
+
+				if (current_sql_command != ""):
+				#
+					Schema._apply_sql_command(connection, current_sql_command)
+					current_sql_command = ""
+				#
+			#
+		#
 	#
 
 	@staticmethod
