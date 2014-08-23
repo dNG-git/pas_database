@@ -199,6 +199,8 @@ python.org: Exit the runtime context related to this object.
 			#
 				if (exc_type == None and exc_value == None): self.session.commit()
 				else: self.session.rollback()
+
+				self.session.expunge_all()
 			#
 		#
 		finally: Connection._release()
