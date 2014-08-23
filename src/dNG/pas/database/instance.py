@@ -117,7 +117,7 @@ python.org: Enter the runtime context related to this object.
 				elif (self.is_reloadable()): self.reload()
 			#
 		#
-		except Exception:
+		except:
 		#
 			self._cleanup_enter()
 			raise

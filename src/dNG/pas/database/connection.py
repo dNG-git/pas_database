@@ -26,8 +26,8 @@ from sqlalchemy.engine import engine_from_config
 from sqlalchemy.event import listen
 from sqlalchemy.orm.interfaces import EXT_CONTINUE
 from sqlalchemy.orm.mapper import configure_mappers, Mapper
+from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
-from threading import local
 from weakref import ref
 
 try: from urllib.parse import urlsplit
@@ -60,21 +60,29 @@ class Connection(object):
 	"""
 True if the SQLAlchemy "translate_row" event has been bound.
 	"""
-	_event_lock = InstanceLock()
+	_instance_lock = InstanceLock()
 	"""
 Thread safety lock
 	"""
-	_local = local()
+	_sa_scoped_session = None
 	"""
-thread-local instance
+SQLAlchemy scoped session instance
 	"""
-	_sa_sessionmaker = None
+	_settings_initialized = False
 	"""
-SQLAlchemy database session constructor
+True after the database settings have been read from file
+	"""
+	_serialized = True
+	"""
+Serialize access to the underlying database if true
 	"""
 	_serialized_lock = ThreadLock()
 	"""
 Thread safety lock
+	"""
+	_weakref_instance = None
+	"""
+Cache weakref instance
 	"""
 
 	def __init__(self):
@@ -107,24 +115,20 @@ SQLAlchemy session
 Number of active transactions
 		"""
 
-		Connection._ensure_thread_local()
-
-		if (Connection._sa_sessionmaker == None):
+		if ((not Connection._event_bound) or Connection._sa_scoped_session == None):
 		#
-			engine = engine_from_config(Connection._local.settings, prefix = "pas_database_sqlalchemy_", strategy = "threadlocal")
+			with Connection._instance_lock:
+			# Thread safety
+				if (Connection._sa_scoped_session == None):
+				#
+					engine = engine_from_config(Settings.get_dict(),
+					                            prefix = "pas_database_sqlalchemy_",
+					                            strategy = "threadlocal"
+					                           )
 
-			Connection._sa_sessionmaker = (sessionmaker(engine, autoflush = False)
-			                               if (Connection.is_serialized()) else
-			                               sessionmaker(engine)
-			                              )
-		#
+					Connection._sa_scoped_session = scoped_session(sessionmaker(engine))
+				#
 
-		self.session = Connection._sa_sessionmaker()
-
-		if (not Connection._event_bound):
-		# Thread safety
-			with Connection._event_lock:
-			#
 				if (not Connection._event_bound):
 				#
 					listen(Mapper, "translate_row", Connection._sa_on_translate_row)
@@ -132,6 +136,8 @@ Number of active transactions
 				#
 			#
 		#
+
+		self.session = Connection._sa_scoped_session
 	#
 
 	def __del__(self):
@@ -151,7 +157,7 @@ Destructor __del__(Connection)
 				if (len(self.session.new) > 0): self.log_handler.warning("{0!r} has new instances to be ignored", self, context = "pas_database")
 			#
 
-			self.session.close()
+			self.session.remove()
 		#
 	#
 
@@ -187,16 +193,15 @@ python.org: Exit the runtime context related to this object.
 
 		self.context_depth -= 1
 
-		if (Connection.is_serialized()
-		    and self.context_depth < 1
-		    and self.get_transaction_depth() < 1
-		   ):
+		try:
 		#
-			if (exc_type == None and exc_value == None): self.session.commit()
-			else: self.session.rollback()
+			if (self.context_depth < 1 and self.get_transaction_depth() < 1):
+			#
+				if (exc_type == None and exc_value == None): self.session.commit()
+				else: self.session.rollback()
+			#
 		#
-
-		Connection._release()
+		finally: Connection._release()
 
 		return False
 	#
@@ -229,7 +234,7 @@ sqlalchemy.org: Begin a transaction on this Session.
 		with self._lock:
 		# SQLAlchemy starts the most outer transaction itself by default
 			if (self.transactions < 0): self.transactions = 0
-			elif (Connection._local.settings.get("pas_database_transaction_use_native_nested", False)): self.session.begin_nested()
+			elif (Settings.get("pas_database_transaction_use_native_nested", False)): self.session.begin_nested()
 			else: self.session.begin(subtransactions = True)
 
 			self.transactions += 1
@@ -324,7 +329,7 @@ sqlalchemy.org: Rollback the current transaction in progress.
 			#
 				if (self.transactions > 0):
 				#
-					if ((not Connection._local.settings.get("pas_database_transaction_use_native_nested", False)) and self.transactions > 1):
+					if ((not Settings.get("pas_database_transaction_use_native_nested", False)) and self.transactions > 1):
 					#
 						for _ in range(1, self.transactions): self.session.rollback()
 						self.transactions = 1
@@ -355,50 +360,55 @@ threads at once (serialized mode).
 	#
 
 	@staticmethod
-	def _ensure_thread_local():
+	def _ensure_settings():
 	#
 		"""
-For thread safety some variables are defined per thread. This method makes
-sure that these variables are defined.
+Check and read settings if needed.
 
 :since: v0.1.00
 		"""
 
-		if (not hasattr(Connection._local, "settings")):
+		if (not Connection._settings_initialized):
 		#
-			Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
-			Connection._local.settings = Settings.get_dict()
+			with Connection._serialized_lock:
+			# Thread safety
+				if (not Connection._settings_initialized):
+				#
+					Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
-			if ("pas_database_url" not in Connection._local.settings): raise ValueException("Minimum database configuration missing")
-			Connection._local.settings['pas_database_url'] = Connection._local.settings['pas_database_url'].replace("[rewrite]path_base[/rewrite]", path.abspath(Connection._local.settings.get("path_base")))
+					if (not Settings.is_defined("pas_database_url")): raise ValueException("Minimum database configuration missing")
+					url = Settings.get("pas_database_url").replace("__path_base__", path.abspath(Settings.get("path_base")))
 
-			if ("pas_database_table_prefix" not in Connection._local.settings): Connection._local.settings['pas_database_table_prefix'] = "pas"
-			Connection._local.serialized = ("pas_database_threaded" in Connection._local.settings and (not Connection._local.settings['pas_database_threaded']))
-			if (Connection._local.serialized): Connection._serialized_lock.set_timeout(Connection._local.settings.get("pas_database_lock_timeout", 30))
+					if (not Settings.is_defined("pas_database_table_prefix")): Settings.set("pas_database_table_prefix", "pas")
+					Connection.serialized = (not Settings.get("pas_database_threaded", True))
+					if (Connection.serialized): Connection._serialized_lock.set_timeout(Settings.get("pas_database_lock_timeout", 30))
 
-			url_elements = urlsplit(Connection._local.settings['pas_database_url'])
+					url_elements = urlsplit(url)
 
-			Connection._local.settings['pas_database_backend_name'] = url_elements.scheme.split("+")[0]
+					Settings.set("pas_database_backend_name", url_elements.scheme.split("+")[0])
 
-			if (url_elements.username == None
-			    and url_elements.password == None
-			    and "pas_database_user" in Connection._local.settings
-			    and "pas_database_password" in Connection._local.settings
-			   ):
+					if (url_elements.username == None
+					    and url_elements.password == None
+					    and Settings.is_defined("pas_database_user")
+					    and Settings.is_defined("pas_database_password")
+					   ):
+					#
+						url = "{0}://{1}:{2}@{3}{4}".format(url_elements.scheme,
+						                                    Settings.get("pas_database_user"),
+						                                    Settings.get("pas_database_password"),
+						                                    url_elements.hostname,
+						                                    url_elements.path
+						                                   )
+
+						if (url_elements.query != ""): url += "?{0}".format(url_elements.query)
+						if (url_elements.fragment != ""): url += "#{0}".format(url_elements.fragment)
+					#
+
+					Settings.set("pas_database_sqlalchemy_url", url)
+
+					Connection._settings_initialized = True
+				#
 			#
-				url = "{0}://{1}:{2}@{3}{4}".format(url_elements.scheme,
-				                                    Connection._local.settings['pas_database_user'],
-				                                    Connection._local.settings['pas_database_password'],
-				                                    url_elements.hostname,
-				                                    url_elements.path
-				                                   )
-
-				Connection._local.settings['pas_database_sqlalchemy_url'] = url
-
-				if (url_elements.query != ""): Connection._local.settings['pas_database_sqlalchemy_url'] += "?{0}".format(url_elements.query)
-				if (url_elements.fragment != ""): Connection._local.settings['pas_database_sqlalchemy_url'] += "#{0}".format(url_elements.fragment)
-			#
-			else: Connection._local.settings['pas_database_sqlalchemy_url'] = Connection._local.settings['pas_database_url']
 		#
 	#
 
@@ -412,15 +422,15 @@ Returns the connection backend.
 :since:  v0.1.00
 		"""
 
-		Connection._ensure_thread_local()
-		return Connection._local.settings['pas_database_backend_name']
+		if (not Connection._settings_initialized): Connection._ensure_settings()
+		return Settings.get("pas_database_backend_name")
 	#
 
 	@staticmethod
 	def get_instance():
 	#
 		"""
-Get the Connection thread-local singleton.
+Get the Connection singleton.
 
 :return: (Connection) Object on success
 :since:  v0.1.00
@@ -428,29 +438,31 @@ Get the Connection thread-local singleton.
 
 		_return = None
 
-		if (hasattr(Connection._local, "weakref_instance")): _return = Connection._local.weakref_instance()
+		if (Connection._weakref_instance != None): _return = Connection._weakref_instance()
 
 		if (_return == None):
 		#
+			Connection._ensure_settings()
+
 			_return = Connection()
-			Connection._local.weakref_instance = ref(_return)
+			Connection._weakref_instance = ref(_return)
 		#
 
 		return _return
 	#
 
 	@staticmethod
-	def get_settings():
+	def get_table_prefix():
 	#
 		"""
-Returns the settings used for the database instance.
+Get the configured database table prefix.
 
-:return: (dict) Database settings
+:return: (str) Table prefix
 :since:  v0.1.00
 		"""
 
-		Connection._ensure_thread_local()
-		return Connection._local.settings
+		if (not Connection._settings_initialized): Connection._ensure_settings()
+		return Settings.get("pas_database_table_prefix")
 	#
 
 	@staticmethod
@@ -463,8 +475,8 @@ Returns true if access to a database instance is serialized.
 :since:  v0.1.00
 		"""
 
-		Connection._ensure_thread_local()
-		return Connection._local.serialized
+		if (not Connection._settings_initialized): Connection._ensure_settings()
+		return Connection._serialized
 	#
 
 	@staticmethod

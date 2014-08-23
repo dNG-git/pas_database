@@ -77,7 +77,7 @@ Get the configured database table prefix.
 :since:  v0.1.00
 		"""
 
-		return Connection.get_settings().get("pas_database_table_prefix")
+		return Connection.get_table_prefix()
 	#
 #
 
