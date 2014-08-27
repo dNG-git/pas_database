@@ -105,8 +105,8 @@ python.org: Enter the runtime context related to this object.
 
 				if (self.local.context_depth < 1):
 				#
-					Connection._acquire()
 					self.local.connection = Connection.get_instance()
+					self.local.connection._enter_context()
 				#
 
 				self.local.context_depth += 1
@@ -119,7 +119,7 @@ python.org: Enter the runtime context related to this object.
 		#
 		except:
 		#
-			self._cleanup_enter()
+			self._enter_context_cleanup()
 			raise
 		#
 	#
@@ -161,7 +161,7 @@ python.org: Exit the runtime context related to this object.
 						self.wrapped_transaction = False
 					#
 
-					if (self.local.context_depth < 1): Connection._release()
+					if (self.local.context_depth < 1): self.local.connection._exit_context(exc_type, exc_value, traceback)
 				#
 			#
 		#
@@ -210,25 +210,6 @@ Applies the sort order to the given SQLAlchemy query instance.
 
 		if (sort_definition != None): _return = sort_definition.apply(self, query)
 		return _return
-	#
-
-	def _cleanup_enter(self):
-	#
-		"""
-This method should be called for if exceptions in "__enter__" occur to
-cleanup database connections held by this instance.
-
-:since: v0.1.00
-		"""
-
-		# pylint: disable=protected-access
-
-		if (self.local.context_depth < 1):
-		#
-			Connection._release()
-			self.local.connection = None
-		#
-		else: self.local.context_depth -= 1
 	#
 
 	def delete(self):
@@ -320,6 +301,25 @@ Checks for an initialized SQLAlchemy database instance or create one.
 			                          cls()
 			                         )
 		#
+	#
+
+	def _enter_context_cleanup(self):
+	#
+		"""
+This method should be called for if exceptions in "__enter__" occur to
+cleanup database connections held by this instance.
+
+:since: v0.1.00
+		"""
+
+		# pylint: disable=protected-access
+
+		if (self.local.context_depth < 1):
+		#
+			Connection._release()
+			self.local.connection = None
+		#
+		else: self.local.context_depth -= 1
 	#
 
 	def _get_data_attribute(self, attribute):

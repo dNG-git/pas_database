@@ -28,6 +28,7 @@ from sqlalchemy.orm.interfaces import EXT_CONTINUE
 from sqlalchemy.orm.mapper import configure_mappers, Mapper
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
+from threading import current_thread
 from weakref import ref
 
 try: from urllib.parse import urlsplit
@@ -138,6 +139,7 @@ Number of active transactions
 		#
 
 		self.session = Connection._sa_scoped_session
+		if (self.log_handler != None and Settings.get("pas_database_threaded_debug", False)): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__init__()- reporting: Thread ID {1:d}", self, current_thread().ident, context = "pas_database")
 	#
 
 	def __del__(self):
@@ -169,12 +171,7 @@ python.org: Enter the runtime context related to this object.
 :since: v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
-
-		Connection._acquire()
-
-		self.context_depth += 1
-
+		self._enter_context()
 		return self
 	#
 
@@ -187,24 +184,7 @@ python.org: Exit the runtime context related to this object.
 :since:  v0.1.00
 		"""
 
-		# pylint: disable=broad-except
-
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
-
-		self.context_depth -= 1
-
-		try:
-		#
-			if (self.context_depth < 1 and self.get_transaction_depth() < 1):
-			#
-				if (exc_type == None and exc_value == None): self.session.commit()
-				else: self.session.rollback()
-
-				self.session.expunge_all()
-			#
-		#
-		finally: Connection._release()
-
+		self._exit_context(exc_type, exc_value, traceback)
 		return False
 	#
 
@@ -267,6 +247,53 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 				#
 			#
 		#
+	#
+
+	def _enter_context(self):
+	#
+		"""
+Enters the connection context.
+
+:since: v0.1.02
+		"""
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._enter_context()- (#echo(__LINE__)#)", self, context = "pas_database")
+
+		Connection._acquire()
+
+		self.context_depth += 1
+
+		return self
+	#
+
+	def _exit_context(self, exc_type, exc_value, traceback):
+	#
+		"""
+Exits the connection context.
+
+:since: v0.1.02
+		"""
+
+		# pylint: disable=broad-except
+
+		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- (#echo(__LINE__)#)", self, context = "pas_database")
+
+		self.context_depth -= 1
+
+		try:
+		#
+			if (self.context_depth < 1 and self.get_transaction_depth() < 1):
+			#
+				if (exc_type == None and exc_value == None): self.session.commit()
+				else: self.session.rollback()
+
+				self.session.expunge_all()
+				if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- reporting: Cleared session instances", self, context = "pas_database")
+			#
+		#
+		finally: Connection._release()
+
+		return False
 	#
 
 	def get_session(self):
