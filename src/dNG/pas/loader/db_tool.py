@@ -84,7 +84,7 @@ Returns true if this tool should handle the initial configuration.
 		"""
 Callback for execution.
 
-:since: v1.0.0
+:since: v0.1.00
 		"""
 
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
@@ -124,7 +124,7 @@ Callback for shutdown.
 		"""
 Callback for execution.
 
-:since: v1.0.0
+:since: v0.1.00
 		"""
 
 		self.output_info("Loading database entities ...")

@@ -1,0 +1,3 @@
+SQLAlchemy>=0.8
+-e git+http://git.direct-netware.de/pas/interactive_cli/#egg=pas_interactive_cli
+-e git+http://git.direct-netware.de/pas/plugins/#egg=pas_plugins
