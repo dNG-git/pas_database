@@ -61,6 +61,7 @@ with TemporaryDirectory(dir = ".") as build_directory:
 	      packages = [ "dNG" ],
 
 	      data_files = [ ( "docs", [ "LICENSE", "README" ]) ],
+	      scripts = [ path.join(_build_path, "pas_db_tool.py") ],
 
 	      # Override build_py to first run builder.py over all PAS modules
 	      cmdclass = { "build_py": BuildPy,
