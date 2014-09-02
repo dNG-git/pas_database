@@ -117,6 +117,8 @@ Callback for shutdown.
 		"""
 
 		Hook.call("dNG.pas.Status.onShutdown")
+
+		Hook.free()
 	#
 
 	def run_apply_schema(self, args):
