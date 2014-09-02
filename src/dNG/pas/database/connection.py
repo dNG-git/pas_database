@@ -410,7 +410,7 @@ Check and read settings if needed.
 
 					if (not Settings.is_defined("pas_database_table_prefix")): Settings.set("pas_database_table_prefix", "pas")
 					Connection._serialized = (not Settings.get("pas_database_threaded", True))
-					if (Connection.serialized): Connection._serialized_lock.set_timeout(Settings.get("pas_database_lock_timeout", 30))
+					if (Connection._serialized): Connection._serialized_lock.set_timeout(Settings.get("pas_database_lock_timeout", 30))
 
 					url_elements = urlsplit(url)
 
