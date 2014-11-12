@@ -115,6 +115,7 @@ python.org: Enter the runtime context related to this object.
 				    and self.local.db_instance != None
 				   ): self._ensure_attached_instance()
 				elif (self.is_reloadable()): self.reload()
+				else: self.local.db_instance = None
 			#
 		#
 		except:
@@ -513,6 +514,7 @@ Reload instance data from the database.
 
 		with self._lock:
 		#
+			if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
 			if (hasattr(self.local, "connection") and self.local.connection != None): self._reload()
 		#
 	#
