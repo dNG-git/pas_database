@@ -204,20 +204,20 @@ Applies the given SQL command to the database connection.
 	#
 
 	@staticmethod
-	def _apply_sql_file(connection, file_pathname):
+	def _apply_sql_file(connection, file_path_name):
 	#
 		"""
 Applies the given SQL file.
 
 :param connection: Database connection
-:param file_pathname: Database specific SQL file
+:param file_path_name: Database specific SQL file
 
 :since: v0.1.00
 		"""
 
 		file_object = File()
 
-		if (file_object.open(file_pathname, True, "r")):
+		if (file_object.open(file_path_name, True, "r")):
 		#
 			file_content = Binary.str(file_object.read())
 			file_object.close()

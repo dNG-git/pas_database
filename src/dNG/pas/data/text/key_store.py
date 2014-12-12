@@ -27,7 +27,6 @@ from dNG.pas.data.settings import Settings
 from dNG.pas.database.connection import Connection
 from dNG.pas.database.instance import Instance
 from dNG.pas.database.nothing_matched_exception import NothingMatchedException
-from dNG.pas.database.transaction_context import TransactionContext
 from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
 from dNG.pas.runtime.io_exception import IOException
 from dNG.pas.runtime.type_exception import TypeException
@@ -178,12 +177,9 @@ Load KeyStore entry from database.
 		#
 			if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
 			#
-				with TransactionContext():
+				if (connection.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0):
 				#
-					if (connection.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0):
-					#
-						connection.optimize_random(_DbKeyStore)
-					#
+					connection.optimize_random(_DbKeyStore)
 				#
 			#
 

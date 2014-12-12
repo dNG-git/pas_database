@@ -121,7 +121,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 		conditions = self._get_conditions(instance)
 
 		return (query
-		        if (conditions == None) else
+		        if (type(conditions) == ConditionDefinition.NONETYPE) else
 		        query.filter(conditions)
 		       )
 	#
@@ -187,7 +187,7 @@ instance.
 		for condition in self.conditions:
 		#
 			condition_clause = self._get_condition(instance, condition)
-			if (type(condition_clause) == ConditionDefinition.NONETYPE): condition_clauses.append(condition_clause)
+			if (type(condition_clause) != ConditionDefinition.NONETYPE): condition_clauses.append(condition_clause)
 		#
 
 		condition_clauses_count = len(condition_clauses)

@@ -137,7 +137,7 @@ Callback for execution.
 
 			self.output_info("Applying schema ...")
 
-			with TransactionContext(), HookContext("dNG.pas.Database.applySchema"):
+			with HookContext("dNG.pas.Database.applySchema"), TransactionContext():
 			#
 				Abstract().metadata.create_all(connection.get_bind())
 			#
