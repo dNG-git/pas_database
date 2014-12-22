@@ -104,13 +104,13 @@ python.org: Exit the runtime context related to this object.
 			#
 				self.context_depth -= 1
 
-				if (exc_type == None and exc_value == None): self.connection.commit()
+				if (exc_type is None and exc_value is None): self.connection.commit()
 				else: self.connection.rollback()
 			#
 			except Exception as handled_exception:
 			#
-				if (LogLine != None): LogLine.error(handled_exception, context = "pas_database")
-				if (exc_type == None and exc_value == None): self.connection.rollback()
+				if (LogLine is not None): LogLine.error(handled_exception, context = "pas_database")
+				if (exc_type is None and exc_value is None): self.connection.rollback()
 			#
 			finally:
 			#

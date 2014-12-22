@@ -95,7 +95,7 @@ python.org: Enter the runtime context related to this object.
 
 		# pylint: disable=broad-except,maybe-no-member,protected-access
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		try:
 		#
@@ -112,7 +112,7 @@ python.org: Enter the runtime context related to this object.
 				self.local.context_depth += 1
 
 				if (hasattr(self.local, "db_instance")
-				    and self.local.db_instance != None
+				    and self.local.db_instance is not None
 				   ): self._ensure_attached_instance()
 				elif (self.is_reloadable()): self.reload()
 				else: self.local.db_instance = None
@@ -136,7 +136,7 @@ python.org: Exit the runtime context related to this object.
 
 		# pylint: disable=broad-except,protected-access
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (self.local.context_depth > 0):
 		# Thread safety
@@ -150,13 +150,13 @@ python.org: Exit the runtime context related to this object.
 					#
 						try:
 						#
-							if (exc_type == None and exc_value == None): self.local.connection.commit()
+							if (exc_type is None and exc_value is None): self.local.connection.commit()
 							else: self.local.connection.rollback()
 						#
 						except Exception as handled_exception:
 						#
-							if (self.log_handler != None): self.log_handler.error(handled_exception, context = "pas_database")
-							if (exc_type == None and exc_value == None): self.local.connection.rollback()
+							if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_database")
+							if (exc_type is None and exc_value is None): self.local.connection.rollback()
 						#
 
 						self.wrapped_transaction = False
@@ -180,10 +180,10 @@ python.org: Called to create a new instance of class cls.
 		"""
 
 		db_instance = (kwargs['db_instance'] if ("db_instance" in kwargs) else None)
-		if (db_instance == None): db_instance = (args[0] if (len(args) > 0) else None)
-		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class) if (isinstance(db_instance, Abstract) and db_instance.db_instance_class != None) else None)
+		if (db_instance is None): db_instance = (args[0] if (len(args) > 0) else None)
+		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class) if (isinstance(db_instance, Abstract) and db_instance.db_instance_class is not None) else None)
 
-		if (db_instance_class == None or cls == db_instance_class): _return = object.__new__(cls)
+		if (db_instance_class is None or cls == db_instance_class): _return = object.__new__(cls)
 		else: _return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
 
 		return _return
@@ -201,15 +201,15 @@ Applies the sort order to the given SQLAlchemy query instance.
 :since:  v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = query
 
 		sort_definition = (self._get_default_sort_definition(context)
-		                   if (self._db_sort_definition == None) else
+		                   if (self._db_sort_definition is None) else
 		                   self._db_sort_definition
 		                  )
 
-		if (sort_definition != None): _return = sort_definition.apply(self, query)
+		if (sort_definition is not None): _return = sort_definition.apply(self, query)
 		return _return
 	#
 
@@ -222,7 +222,7 @@ Deletes this entry from the database.
 :since:  v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = True
 
 		if (self.is_known()):
@@ -238,6 +238,7 @@ Deletes this entry from the database.
 		else: _return = False
 
 		return _return
+	#
 
 	def _ensure_attached_instance(self):
 	#
@@ -295,7 +296,7 @@ Checks for an initialized SQLAlchemy database instance or create one.
 :since: v0.1.01
 		"""
 
-		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance == None):
+		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance is None):
 		#
 			self.local.db_instance = (None
 			                          if (self.is_reloadable()) else
@@ -349,7 +350,7 @@ Returns the requested attributes.
 :since:  v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = { }
 
 		with self:
@@ -403,7 +404,7 @@ Returns the default sort definition list.
 :since:  v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 		return SortDefinition()
 	#
 
@@ -464,7 +465,7 @@ Returns true if at least one of the attributes is "None".
 
 			for attribute in args:
 			#
-				if (self._get_data_attribute(attribute) == None):
+				if (self._get_data_attribute(attribute) is None):
 				#
 					_return = True
 					break
@@ -510,12 +511,12 @@ Reload instance data from the database.
 :since: v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		with self._lock:
 		#
 			if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
-			if (hasattr(self.local, "connection") and self.local.connection != None): self._reload()
+			if (hasattr(self.local, "connection") and self.local.connection is not None): self._reload()
 		#
 	#
 
@@ -527,7 +528,7 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		if (self.local.db_instance == None): raise IOException("Database instance is not reloadable.")
+		if (self.local.db_instance is None): raise IOException("Database instance is not reloadable.")
 		self.local.connection.refresh(self.local.db_instance)
 	#
 
@@ -539,7 +540,7 @@ Saves changes of the instance into the database.
 :since: v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		with self:
 		#
@@ -571,7 +572,7 @@ Sets the sort definition list.
 :since: v0.1.00
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
 		self._db_sort_definition = sort_definition
@@ -588,42 +589,42 @@ Updates the instance already saved to the database.
 		pass
 	#
 
-	@staticmethod
-	def buffered_iterator(entity, result, instance_class = None, *args, **kwargs):
+	@classmethod
+	def buffered_iterator(cls, entity, result, *args, **kwargs):
 	#
 		"""
 Returns an instance wrapping buffered iterator to encapsulate SQLAlchemy
 database instances with an given class.
 
+:param cls: Encapsulating database instance class
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
-:param instance_class: Encapsulating database instance class
 
 :return: (Iterator) InstanceIterator object
 :since:  v0.1.00
 		"""
 
 		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
-		return InstanceIterator(entity, result, True, instance_class, *args, **kwargs)
+		return InstanceIterator(entity, result, True, cls, *args, **kwargs)
 	#
 
-	@staticmethod
-	def iterator(entity, result, instance_class = None, *args, **kwargs):
+	@classmethod
+	def iterator(cls, entity, result, *args, **kwargs):
 	#
 		"""
 Returns an instance wrapping unbuffered iterator to encapsulate SQLAlchemy
 database instances with an given class.
 
+:param cls: Encapsulating database instance class
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
-:param instance_class: Encapsulating database instance class
 
 :return: (Iterator) InstanceIterator object
 :since:  v0.1.00
 		"""
 
 		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
-		return InstanceIterator(entity, result, False, instance_class, *args, **kwargs)
+		return InstanceIterator(entity, result, False, cls, *args, **kwargs)
 	#
 
 	@staticmethod

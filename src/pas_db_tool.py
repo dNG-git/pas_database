@@ -32,7 +32,7 @@ try:
 except KeyboardInterrupt: pass
 except Exception as handled_exception:
 #
-	if (db_tool != None):
+	if (db_tool is not None):
 	#
 		db_tool.error(handled_exception)
 		db_tool.stop()

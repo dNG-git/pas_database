@@ -56,10 +56,10 @@ Constructor __init__(KeyStore)
 :since: v0.1.00
 		"""
 
-		if (db_instance == None): db_instance = _DbKeyStore()
+		if (db_instance is None): db_instance = _DbKeyStore()
 		Instance.__init__(self, db_instance)
 
-		self.db_id = (None if (db_instance == None) else self.get_id())
+		self.db_id = (None if (db_instance is None) else self.get_id())
 		"""
 Database ID used for reloading
 		"""
@@ -91,7 +91,7 @@ Returns the values originally given as a dict to this KeyStore instance.
 		"""
 
 		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
-		if (_return == None): raise ValueException("Value of the KeyStore does not contain the expected data format")
+		if (_return is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
 		return _return
 	#
 
@@ -122,9 +122,9 @@ Implementation of the reloading SQLAlchemy database instance logic.
 :since: v0.1.00
 		"""
 
-		if (self.local.db_instance == None):
+		if (self.local.db_instance is None):
 		#
-			if (self.db_id == None): raise IOException("Database instance is not reloadable.")
+			if (self.db_id is None): raise IOException("Database instance is not reloadable.")
 			self.local.db_instance = self.local.connection.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
 		#
 		else: Instance._reload(self)
@@ -183,8 +183,8 @@ Load KeyStore entry from database.
 				#
 			#
 
-			_return = (None if (db_instance == None) else KeyStore(db_instance))
-			if (_return != None and (not _return.is_valid())): _return = None
+			_return = (None if (db_instance is None) else KeyStore(db_instance))
+			if (_return is not None and (not _return.is_valid())): _return = None
 		#
 
 		return _return
@@ -202,10 +202,10 @@ Load KeyStore value by ID.
 :since:  v0.1.00
 		"""
 
-		if (_id == None): raise NothingMatchedException("KeyStore ID is invalid")
+		if (_id is None): raise NothingMatchedException("KeyStore ID is invalid")
 
 		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).get(_id))
-		if (_return == None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
+		if (_return is None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
 	#
 
@@ -221,10 +221,10 @@ Load KeyStore value by key.
 :since:  v0.1.00
 		"""
 
-		if (key == None): raise NothingMatchedException("KeyStore key is invalid")
+		if (key is None): raise NothingMatchedException("KeyStore key is invalid")
 
 		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
-		if (_return == None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
+		if (_return is None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
 		return _return
 	#
 #

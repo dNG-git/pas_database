@@ -63,7 +63,7 @@ sqlalchemy.org: Receive a bound parameter value to be converted.
          from there to the DBAPI execute() method.
 		"""
 
-		return (None if (value == None) else datetime.fromtimestamp(value))
+		return (None if (value is None) else datetime.fromtimestamp(value))
 	#
 
 	def process_result_value(self, value, dialect):
@@ -83,7 +83,7 @@ sqlalchemy.org: Receive a result-row column value to be converted.
 
 		_return = None
 
-		if (value != None):
+		if (value is not None):
 		#
 			_return = (value.timestamp()
 			           if (hasattr(value, "timestamp")) else

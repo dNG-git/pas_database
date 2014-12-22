@@ -57,7 +57,7 @@ Constructor __init__(SortDefinition)
 List of tuples defining the attribute and sort direction
 		"""
 
-		if (sort_tuples == None): sort_tuples = [ ]
+		if (sort_tuples is None): sort_tuples = [ ]
 
 		for sort_tuple in sort_tuples:
 		#

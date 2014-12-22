@@ -82,8 +82,8 @@ Constructor __init__(SchemaVersion)
 		"""
 
 		Abstract.__init__(self, *args, **kwargs)
-		if (self.id == None): self.id = uuid().hex
-		if (self.applied == None): self.applied = int(time())
+		if (self.id is None): self.id = uuid().hex
+		if (self.applied is None): self.applied = int(time())
 	#
 #
 

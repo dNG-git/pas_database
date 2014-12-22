@@ -111,9 +111,9 @@ class.
 
 		# pylint: disable=broad-except
 
-		if (instance_class == None
+		if (instance_class is None
 		    or (not issubclass(instance_class, _DbAbstract))
-		    or instance_class.db_schema_version == None
+		    or instance_class.db_schema_version is None
 		   ): raise TypeException("Given instance class is invalid")
 
 		instance_class_name = instance_class.__name__
@@ -133,7 +133,7 @@ class.
 				re_object = re.compile("schema\\_\\d+\\.sql$", re.I)
 
 				schema_version_files = { filename: path.join(schema_directory_path, filename)
-				                         for filename in os.listdir(schema_directory_path) if (re_object.match(filename) != None)
+				                         for filename in os.listdir(schema_directory_path) if (re_object.match(filename) is not None)
 				                       }
 			#
 
@@ -234,7 +234,7 @@ Applies the given SQL file.
 		#
 			re_result = Schema.RE_ESCAPED.search(sql_command)
 
-			if (re_result != None
+			if (re_result is not None
 			    and (len(re_result.group(1)) % 2) == 1
 			   ): current_sql_command += sql_command
 			else:
@@ -275,7 +275,7 @@ Load the schema entry with the highest version for the given name.
 			db_query = db_query.order_by(_DbSchemaVersion.version.desc()).limit(1)
 			db_instance = db_query.first()
 
-			if (db_instance == None): raise NothingMatchedException("Schema name '{0}' is invalid".format(name))
+			if (db_instance is None): raise NothingMatchedException("Schema name '{0}' is invalid".format(name))
 			_return = Schema(db_instance)
 		#
 

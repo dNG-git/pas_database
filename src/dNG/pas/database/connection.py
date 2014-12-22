@@ -28,7 +28,7 @@ from sqlalchemy.orm.interfaces import EXT_CONTINUE
 from sqlalchemy.orm.mapper import configure_mappers, Mapper
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
-from threading import current_thread
+from threading import current_thread, local
 from weakref import ref
 
 try: from urllib.parse import urlsplit
@@ -94,13 +94,9 @@ Constructor __init__(Connection)
 :since: v0.1.00
 		"""
 
-		self.context_depth = 0
+		self.local = None
 		"""
-Connection context depth
-		"""
-		self._lock = ThreadLock()
-		"""
-Thread safety lock
+Local data handle
 		"""
 		self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
 		"""
@@ -111,16 +107,12 @@ happened.
 		"""
 SQLAlchemy session
 		"""
-		self.transactions = -1
-		"""
-Number of active transactions
-		"""
 
-		if ((not Connection._event_bound) or Connection._sa_scoped_session == None):
+		if ((not Connection._event_bound) or Connection._sa_scoped_session is None):
 		#
 			with Connection._instance_lock:
 			# Thread safety
-				if (Connection._sa_scoped_session == None):
+				if (Connection._sa_scoped_session is None):
 				#
 					engine = engine_from_config(Settings.get_dict(),
 					                            prefix = "pas_database_sqlalchemy_",
@@ -139,7 +131,7 @@ Number of active transactions
 		#
 
 		self.session = Connection._sa_scoped_session
-		if (self.log_handler != None and Settings.get("pas_database_threaded_debug", False)): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__init__()- reporting: Thread ID {1:d}", self, current_thread().ident, context = "pas_database")
+		if (self.log_handler is not None and Settings.get("pas_database_threaded_debug", False)): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__init__()- reporting: Thread ID {1:d}", self, current_thread().ident, context = "pas_database")
 	#
 
 	def __del__(self):
@@ -150,9 +142,9 @@ Destructor __del__(Connection)
 :since: v0.1.00
 		"""
 
-		if (self.session != None):
+		if (self.session is not None):
 		#
-			if (self.log_handler != None):
+			if (self.log_handler is not None):
 			#
 				if (len(self.session.deleted) > 0): self.log_handler.warning("{0!r} has deleted instances to be rolled back", self, context = "pas_database")
 				if (len(self.session.dirty) > 0): self.log_handler.warning("{0!r} has dirty instances to be rolled back", self, context = "pas_database")
@@ -201,7 +193,7 @@ class tree for self).
 :since:  v0.1.00
 		"""
 
-		if (self.session == None or (not hasattr(self.session, name))): raise TypeException("SQLAlchemy session does not implement '{0}'".format(name))
+		if (self.session is None or (not hasattr(self.session, name))): raise TypeException("SQLAlchemy session does not implement '{0}'".format(name))
 		return getattr(self.session, name)
 	#
 
@@ -213,15 +205,15 @@ sqlalchemy.org: Begin a transaction on this Session.
 :since: v0.1.00
 		"""
 
-		with self._lock:
-		# SQLAlchemy starts the most outer transaction itself by default
-			if (self.transactions < 0): self.transactions = 0
-			elif (Settings.get("pas_database_transaction_use_native_nested", False)): self.session.begin_nested()
-			else: self.session.begin(subtransactions = True)
+		self._ensure_thread_local()
 
-			self.transactions += 1
-			if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' started", self, self.transactions, context = "pas_database")
-		#
+		# SQLAlchemy starts the most outer transaction itself by default
+		if (self.local.transactions < 0): self.local.transactions = 0
+		elif (Settings.get("pas_database_transaction_use_native_nested", False)): self.session.begin_nested()
+		else: self.session.begin(subtransactions = True)
+
+		self.local.transactions += 1
+		if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' started", self, self.local.transactions, context = "pas_database")
 	#
 
 	def commit(self):
@@ -232,20 +224,34 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 :since: v0.1.00
 		"""
 
-		if (self.transactions > 0):
-		# Thread safety
-			with self._lock:
-			#
-				if (self.transactions > 0):
-				#
-					self.session.commit()
+		self._ensure_thread_local()
 
-					if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' committed", self, self.transactions, context = "pas_database")
+		if (self.local.transactions > 0):
+		#
+			self.session.commit()
 
-					if (self.transactions < 2): self.transactions = -1
-					else: self.transactions -= 1
-				#
-			#
+			if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' committed", self, self.local.transactions, context = "pas_database")
+
+			if (self.local.transactions < 2): self.local.transactions = -1
+			else: self.local.transactions -= 1
+		#
+	#
+
+	def _ensure_thread_local(self):
+	#
+		"""
+For thread safety some variables are defined per thread. This method makes
+sure that these variables are defined.
+
+:since: v0.1.00
+		"""
+
+		if (self.local is None): self.local = local()
+
+		if (not hasattr(self.local, "transactions")):
+		#
+			self.local.context_depth = 0
+			self.local.transactions = -1
 		#
 	#
 
@@ -257,11 +263,12 @@ Enters the connection context.
 :since: v0.1.02
 		"""
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._enter_context()- (#echo(__LINE__)#)", self, context = "pas_database")
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._enter_context()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		Connection._acquire()
 
-		self.context_depth += 1
+		self._ensure_thread_local()
+		self.local.context_depth += 1
 
 		return self
 	#
@@ -274,21 +281,19 @@ Exits the connection context.
 :since: v0.1.02
 		"""
 
-		# pylint: disable=broad-except
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- (#echo(__LINE__)#)", self, context = "pas_database")
 
-		if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- (#echo(__LINE__)#)", self, context = "pas_database")
-
-		self.context_depth -= 1
+		self.local.context_depth -= 1
 
 		try:
 		#
-			if (self.context_depth < 1 and self.get_transaction_depth() < 1):
+			if (self.local.context_depth < 1 and self.get_transaction_depth() < 1):
 			#
-				if (exc_type == None and exc_value == None): self.session.commit()
+				if (exc_type is None and exc_value is None): self.session.commit()
 				else: self.session.rollback()
 
 				self.session.expunge_all()
-				if (self.log_handler != None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- reporting: Cleared session instances", self, context = "pas_database")
+				if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- reporting: Cleared session instances", self, context = "pas_database")
 			#
 		#
 		finally: Connection._release()
@@ -315,7 +320,8 @@ Returns the current transaction depth.
 :since: v0.1.00
 		"""
 
-		return (0 if (self.transactions < 0) else self.transactions)
+		self._ensure_thread_local()
+		return (0 if (self.local.transactions < 0) else self.local.transactions)
 	#
 
 	def optimize(self, table):
@@ -352,26 +358,22 @@ sqlalchemy.org: Rollback the current transaction in progress.
 :since: v0.1.00
 		"""
 
-		if (self.transactions > 0):
-		# Thread safety
-			with self._lock:
+		self._ensure_thread_local()
+
+		if (self.local.transactions > 0):
+		#
+			if ((not Settings.get("pas_database_transaction_use_native_nested", False)) and self.local.transactions > 1):
 			#
-				if (self.transactions > 0):
-				#
-					if ((not Settings.get("pas_database_transaction_use_native_nested", False)) and self.transactions > 1):
-					#
-						for _ in range(1, self.transactions): self.session.rollback()
-						self.transactions = 1
-					#
-
-					self.session.rollback()
-
-					if (self.log_handler != None): self.log_handler.debug("{0!r} transaction '{1:d}' rolled back", self, self.transactions, context = "pas_database")
-
-					if (self.transactions < 2): self.transactions = -1
-					else: self.transactions -= 1
-				#
+				for _ in range(1, self.local.transactions): self.session.rollback()
+				self.local.transactions = 1
 			#
+
+			self.session.rollback()
+
+			if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' rolled back", self, self.local.transactions, context = "pas_database")
+
+			if (self.local.transactions < 2): self.local.transactions = -1
+			else: self.local.transactions -= 1
 		#
 	#
 
@@ -416,8 +418,8 @@ Check and read settings if needed.
 
 					Settings.set("pas_database_backend_name", url_elements.scheme.split("+")[0])
 
-					if (url_elements.username == None
-					    and url_elements.password == None
+					if (url_elements.username is None
+					    and url_elements.password is None
 					    and Settings.is_defined("pas_database_user")
 					    and Settings.is_defined("pas_database_password")
 					   ):
@@ -467,9 +469,9 @@ Get the Connection singleton.
 
 		_return = None
 
-		if (Connection._weakref_instance != None): _return = Connection._weakref_instance()
+		if (Connection._weakref_instance is not None): _return = Connection._weakref_instance()
 
-		if (_return == None):
+		if (_return is None):
 		#
 			Connection._ensure_settings()
 
@@ -535,7 +537,7 @@ new row instance.
 :since:  v0.1.00
 		"""
 
-		if (mapper.polymorphic_map != None and mapper.polymorphic_on in row):
+		if (mapper.polymorphic_map is not None and mapper.polymorphic_on in row):
 		#
 			common_name = "dNG.pas.database.instances.{0}".format(row[mapper.polymorphic_on])
 			if ((not NamedLoader.is_defined(common_name, False)) and NamedLoader.is_defined(common_name)): configure_mappers()

@@ -92,7 +92,7 @@ Callback for execution.
 
 		self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
 
-		if (self.log_handler != None):
+		if (self.log_handler is not None):
 		#
 			Hook.set_log_handler(self.log_handler)
 			NamedLoader.set_log_handler(self.log_handler)

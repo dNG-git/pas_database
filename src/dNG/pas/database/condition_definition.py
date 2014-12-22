@@ -42,11 +42,6 @@ a SQLalchemy database query before execution.
 	"""
 AND condition concatenation
 	"""
-	NONETYPE = type(None)
-	"""
-NoneType used to validate a SQLalchemy condition is returned by
-"_get_condition()".
-	"""
 	OR = 2
 	"""
 OR condition concatenation
@@ -121,7 +116,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 		conditions = self._get_conditions(instance)
 
 		return (query
-		        if (type(conditions) == ConditionDefinition.NONETYPE) else
+		        if (conditions is None) else
 		        query.filter(conditions)
 		       )
 	#
@@ -187,7 +182,7 @@ instance.
 		for condition in self.conditions:
 		#
 			condition_clause = self._get_condition(instance, condition)
-			if (type(condition_clause) != ConditionDefinition.NONETYPE): condition_clauses.append(condition_clause)
+			if (condition_clause is not None): condition_clauses.append(condition_clause)
 		#
 
 		condition_clauses_count = len(condition_clauses)

@@ -89,7 +89,7 @@ python.org: Return an iterator object.
 :since:  v0.1.00
 		"""
 
-		return (iter(self.result) if (self.instance_class == None) else self)
+		return (iter(self.result) if (self.instance_class is None) else self)
 	#
 
 	def __next__(self):
@@ -104,9 +104,9 @@ python.org: Return the next item from the container.
 		if (self.buffered):
 		#
 			if (len(self.result) < 1): raise StopIteration()
-			_return = (self.result.pop(0) if (self.instance_class == None) else self.instance_class(self.result.pop(0), *self.args, **self.kwargs))
+			_return = (self.result.pop(0) if (self.instance_class is None) else self.instance_class(self.result.pop(0), *self.args, **self.kwargs))
 		#
-		else: _return = (next(self.result) if (self.instance_class == None) else self.instance_class(next(self.result), *self.args, **self.kwargs))
+		else: _return = (next(self.result) if (self.instance_class is None) else self.instance_class(next(self.result), *self.args, **self.kwargs))
 
 		return _return
 	#
