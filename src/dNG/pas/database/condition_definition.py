@@ -48,13 +48,11 @@ OR condition concatenation
 	"""
 	TYPE_CASE_INSENSITIVE_MATCH = 3
 	"""
-Matches if the attribute value matches the case insensitive condition. "*"
-is used as a placeholder.
+Matches if the attribute value matches the case insensitive condition.
 	"""
 	TYPE_CASE_SENSITIVE_MATCH = 2
 	"""
-Matches if the attribute value matches the case sensitive condition. "*"
-is used as a placeholder.
+Matches if the attribute value matches the case sensitive condition.
 	"""
 	TYPE_EXACT_MATCH = 1
 	"""
@@ -134,7 +132,17 @@ Returns a SQLalchemy condition.
 
 		_return = None
 
-		if (condition['type'] == ConditionDefinition.TYPE_EXACT_MATCH):
+		if (condition['type'] == ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH):
+		#
+			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
+			_return = column.ilike(condition['value'], "\\")
+		#
+		elif (condition['type'] == ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH):
+		#
+			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
+			_return = column.like(condition['value'], "\\")
+		#
+		elif (condition['type'] == ConditionDefinition.TYPE_EXACT_MATCH):
 		#
 			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
 			_return = (column == condition['value'])
@@ -199,6 +207,40 @@ instance.
 		return _return
 	#
 
+	def add_case_insensitive_match_condition(self, attribute, value):
+	#
+		"""
+Adds a case insensitive condition to match the given value.
+
+:param attribute: Database entity attribute
+:param value: Condition value
+
+:since: v0.1.02
+		"""
+
+		self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH,
+		                         "attribute": attribute,
+		                         "value": value
+		                       })
+	#
+
+	def add_case_sensitive_match_condition(self, attribute, value):
+	#
+		"""
+Adds a case sensitive condition to match the given value.
+
+:param attribute: Database entity attribute
+:param value: Condition value
+
+:since: v0.1.02
+		"""
+
+		self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH,
+		                         "attribute": attribute,
+		                         "value": value
+		                       })
+	#
+
 	def add_exact_match_condition(self, attribute, value):
 	#
 		"""
@@ -207,8 +249,7 @@ Adds a condition to match the given value exactly.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:return: (object) ConditionDefinition instance
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_MATCH,
@@ -225,8 +266,7 @@ Adds a condition to match values greater than the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:return: (object) ConditionDefinition instance
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_MATCH,
@@ -243,8 +283,7 @@ Adds a condition to match values greater than or equal the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:return: (object) ConditionDefinition instance
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH,
@@ -261,8 +300,7 @@ Adds a condition to match values less than the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:return: (object) ConditionDefinition instance
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_MATCH,
@@ -279,8 +317,7 @@ Adds a condition to match values less than or equal the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:return: (object) ConditionDefinition instance
-:since:  v0.1.00
+:since: v0.1.00
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH,

@@ -273,6 +273,26 @@ Enters the connection context.
 		return self
 	#
 
+	def escape_like_condition(self, value):
+	#
+		"""
+Escapes the given value to be used in like conditions based on the default
+backslash escape character.
+
+@TODO: Add database specific layer.
+
+:param value: LIKE condition value
+
+:return: (str) Escaped condition value
+:since:  v0.1.02
+		"""
+
+		_return = value.replace("%", "\\%")
+		_return = _return.replace("_", "\\_")
+
+		return _return
+	#
+
 	def _exit_context(self, exc_type, exc_value, traceback):
 	#
 		"""
