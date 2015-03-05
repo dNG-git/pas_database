@@ -61,19 +61,19 @@ List of tuples defining the attribute and sort direction
 
 		for sort_tuple in sort_tuples:
 		#
-			if (type(sort_tuple) != tuple): raise TypeException("Sort definition data type given is not supported")
+			if (type(sort_tuple) is not tuple): raise TypeException("Sort definition data type given is not supported")
 			if (len(sort_tuple) != 2): raise ValueException("Sort definition given is not supported")
 
 			self.append(sort_tuple[0], sort_tuple[1])
 		#
 	#
 
-	def apply(self, instance, query):
+	def apply(self, db_column_definition, query):
 	#
 		"""
 Applies the sort order to the given SQLAlchemy query instance.
 
-:param instance: Database instance
+:param db_column_definition: Database class or column definition
 :param query: SQLAlchemy query instance
 
 :return: (object) Modified SQLAlchemy query instance
@@ -82,11 +82,13 @@ Applies the sort order to the given SQLAlchemy query instance.
 
 		_return = query
 
+		is_get_db_column_available = hasattr(db_column_definition, "get_db_column")
+
 		for sort_definition in self.sort_tuples:
 		#
-			column = (instance._get_db_column(sort_definition[0])
-			          if (hasattr(instance, "_get_db_column")) else
-			          getattr(instance, sort_definition[0])
+			column = (db_column_definition.get_db_column(sort_definition[0])
+			          if (is_get_db_column_available) else
+			          getattr(db_column_definition, sort_definition[0])
 			         )
 
 			_return = _return.order_by(column.asc()

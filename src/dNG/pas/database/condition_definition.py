@@ -46,37 +46,58 @@ AND condition concatenation
 	"""
 OR condition concatenation
 	"""
-	TYPE_CASE_INSENSITIVE_MATCH = 3
+	TYPE_CASE_INSENSITIVE_MATCH = 7
 	"""
 Matches if the attribute value matches the case insensitive condition.
 	"""
-	TYPE_CASE_SENSITIVE_MATCH = 2
+	TYPE_CASE_INSENSITIVE_NO_MATCH = 8
+	"""
+Matches if the attribute value does not match the case insensitive
+condition.
+	"""
+	TYPE_CASE_SENSITIVE_MATCH = 5
 	"""
 Matches if the attribute value matches the case sensitive condition.
 	"""
+	TYPE_CASE_SENSITIVE_NO_MATCH = 6
+	"""
+Matches if the attribute value does not match the case sensitive condition.
+	"""
 	TYPE_EXACT_MATCH = 1
 	"""
-Matches if the attribute value is matches the condition exactly
+Matches if the attribute value matches the condition exactly.
 	"""
-	TYPE_GREATER_THAN_MATCH = 6
+	TYPE_EXACT_NO_MATCH = 2
 	"""
-Matches if the attribute value is greater than the condition
+Matches if the attribute value does not match the condition exactly.
 	"""
-	TYPE_GREATER_THAN_OR_EQUAL_MATCH = 7
+	TYPE_GREATER_THAN_MATCH = 11
 	"""
-Matches if the attribute value is greater than or equals the condition
+Matches if the attribute value is greater than the condition.
 	"""
-	TYPE_LESS_THAN_MATCH = 4
+	TYPE_GREATER_THAN_OR_EQUAL_MATCH = 12
 	"""
-Matches if the attribute value is less than the condition
+Matches if the attribute value is greater than or equals the condition.
 	"""
-	TYPE_LESS_THAN_OR_EQUAL_MATCH = 5
+	TYPE_IN_LIST_MATCH = 3
 	"""
-Matches if the attribute value is less than or equals the condition
+Matches if the property is a exact match of a value in the list.
 	"""
-	TYPE_SUB_CONDITION = 8
+	TYPE_LESS_THAN_MATCH = 9
 	"""
-Condition contains a sub condition definition
+Matches if the attribute value is less than the condition.
+	"""
+	TYPE_LESS_THAN_OR_EQUAL_MATCH = 10
+	"""
+Matches if the attribute value is less than or equals the condition.
+	"""
+	TYPE_NOT_IN_LIST_MATCH = 4
+	"""
+Matches if the property is not a exact match of a value in the list.
+	"""
+	TYPE_SUB_CONDITION = 13
+	"""
+Condition contains a sub condition definition.
 	"""
 
 	def __init__(self, concatenation = OR):
@@ -99,114 +120,6 @@ List of conditions
 		self.set_concatenation(concatenation)
 	#
 
-	def apply(self, instance, query):
-	#
-		"""
-Applies the sort order to the given SQLAlchemy query instance.
-
-:param instance: Database instance
-:param query: SQLAlchemy query instance
-
-:return: (object) Modified SQLAlchemy query instance
-:since:  v0.1.00
-		"""
-
-		conditions = self._get_conditions(instance)
-
-		return (query
-		        if (conditions is None) else
-		        query.filter(conditions)
-		       )
-	#
-
-	def _get_condition(self, instance, condition):
-	#
-		"""
-Returns a SQLalchemy condition.
-
-:param instance: Database instance
-:param condition: Condition
-
-:return: (object) SQLalchemy condition; None if unknown type or empty
-		"""
-
-		_return = None
-
-		if (condition['type'] == ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = column.ilike(condition['value'], "\\")
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = column.like(condition['value'], "\\")
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_EXACT_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = (column == condition['value'])
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_GREATER_THAN_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = (column > condition['value'])
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = (column >= condition['value'])
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_LESS_THAN_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = (column < condition['value'])
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH):
-		#
-			column = ConditionDefinition._get_instance_column(instance, condition['attribute'])
-			_return = (column <= condition['value'])
-		#
-		elif (condition['type'] == ConditionDefinition.TYPE_SUB_CONDITION): _return = condition['condition_definition']._get_conditions(instance)
-
-		return _return
-	#
-
-	def _get_conditions(self, instance):
-	#
-		"""
-Returns the SQLalchemy condition clause corresponding to this definition
-instance.
-
-:param instance: Database instance
-
-:return: (object) SQLalchemy condition clause; None if empty
-		"""
-
-		_return = None
-
-		condition_clauses = [ ]
-
-		for condition in self.conditions:
-		#
-			condition_clause = self._get_condition(instance, condition)
-			if (condition_clause is not None): condition_clauses.append(condition_clause)
-		#
-
-		condition_clauses_count = len(condition_clauses)
-
-		if (condition_clauses_count == 1): _return = condition_clauses[0]
-		elif (condition_clauses_count > 1):
-		#
-			_return = (and_(*condition_clauses)
-			           if (self.concatenation == ConditionDefinition.AND) else
-			           or_(*condition_clauses)
-			          )
-		#
-
-		return _return
-	#
-
 	def add_case_insensitive_match_condition(self, attribute, value):
 	#
 		"""
@@ -219,6 +132,23 @@ Adds a case insensitive condition to match the given value.
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH,
+		                         "attribute": attribute,
+		                         "value": value
+		                       })
+	#
+
+	def add_case_insensitive_no_match_condition(self, attribute, value):
+	#
+		"""
+Adds a case insensitive condition to not match the given value.
+
+:param attribute: Database entity attribute
+:param value: Condition value
+
+:since: v0.1.02
+		"""
+
+		self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_NO_MATCH,
 		                         "attribute": attribute,
 		                         "value": value
 		                       })
@@ -241,6 +171,23 @@ Adds a case sensitive condition to match the given value.
 		                       })
 	#
 
+	def add_case_sensitive_no_match_condition(self, attribute, value):
+	#
+		"""
+Adds a case sensitive condition to not match the given value.
+
+:param attribute: Database entity attribute
+:param value: Condition value
+
+:since: v0.1.02
+		"""
+
+		self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_NO_MATCH,
+		                         "attribute": attribute,
+		                         "value": value
+		                       })
+	#
+
 	def add_exact_match_condition(self, attribute, value):
 	#
 		"""
@@ -253,6 +200,23 @@ Adds a condition to match the given value exactly.
 		"""
 
 		self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_MATCH,
+		                         "attribute": attribute,
+		                         "value": value
+		                       })
+	#
+
+	def add_exact_no_match_condition(self, attribute, value):
+	#
+		"""
+Adds a condition to not match the given value exactly.
+
+:param attribute: Database entity attribute
+:param value: Condition value
+
+:since: v0.1.00
+		"""
+
+		self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_NO_MATCH,
 		                         "attribute": attribute,
 		                         "value": value
 		                       })
@@ -292,6 +256,26 @@ Adds a condition to match values greater than or equal the given one.
 		                       })
 	#
 
+	def add_in_list_match_condition(self, attribute, value):
+	#
+		"""
+Adds a condition to match a value exactly in the list given.
+
+:param attribute: Database entity attribute
+:param value: List of condition values
+
+:since: v0.1.00
+		"""
+
+		if (isinstance(value, list) and len(value) > 0):
+		#
+			self.conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
+			                         "attribute": attribute,
+			                         "value": value
+			                       })
+		#
+	#
+
 	def add_less_than_match_condition(self, attribute, value):
 	#
 		"""
@@ -326,6 +310,26 @@ Adds a condition to match values less than or equal the given one.
 		                       })
 	#
 
+	def add_not_in_list_match_condition(self, attribute, value):
+	#
+		"""
+Adds a condition to match a value exactly in the list given.
+
+:param attribute: Database entity attribute
+:param value: List of condition values
+
+:since: v0.1.00
+		"""
+
+		if (isinstance(value, list) and len(value) > 0):
+		#
+			self.conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
+			                         "attribute": attribute,
+			                         "value": value
+			                       })
+		#
+	#
+
 	def add_sub_condition(self, condition_definition):
 	#
 		"""
@@ -338,20 +342,176 @@ Adds the given condition definition as a sub condition.
 
 		if (not isinstance(condition_definition, ConditionDefinition)): raise TypeException("Given condition definition type is invalid")
 
-		self.conditions.append({ "type": ConditionDefinition.TYPE_SUB_CONDITION,
-		                         "condition_definition": condition_definition
-		                       })
+		if (condition_definition.get_conditions_count() > 0):
+		#
+			self.conditions.append({ "type": ConditionDefinition.TYPE_SUB_CONDITION,
+			                         "condition_definition": condition_definition
+			                       })
+		#
+	#
+
+	def apply(self, db_column_definition, query):
+	#
+		"""
+Applies the conditions to the given SQLAlchemy query instance.
+
+:param db_column_definition: Database class or column definition
+:param query: SQLAlchemy query instance
+
+:return: (object) Modified SQLAlchemy query instance
+:since:  v0.1.00
+		"""
+
+		conditions = self._get_conditions(db_column_definition)
+
+		return (query
+		        if (conditions is None) else
+		        query.filter(conditions)
+		       )
 	#
 
 	def clear(self):
 	#
 		"""
-Clears the current list.
+Clears the current condition list.
 
 :since: v0.1.00
 		"""
 
 		self.conditions = [ ]
+	#
+
+	def get_concatenation(self, concatenation):
+	#
+		"""
+Returns the concatenation used for this condition definition.
+
+:retrun: (int) Concatenation type
+:since:  v0.1.02
+		"""
+
+		return self.concatenation
+	#
+
+	def _get_condition(self, db_column_definition, condition):
+	#
+		"""
+Returns a SQLalchemy condition.
+
+:param db_column_definition: Database class or column definition
+:param condition: Condition
+
+:return: (object) SQLalchemy condition; None if unknown type or empty
+		"""
+
+		_return = None
+
+		if (condition['type'] == ConditionDefinition.TYPE_SUB_CONDITION):
+		#
+			_return = condition['condition_definition']._get_conditions(db_column_definition)
+		#
+		else:
+		#
+			column = ConditionDefinition._get_db_column(db_column_definition, condition['attribute'])
+
+			if (condition['type'] == ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH):
+			#
+				_return = column.ilike(condition['value'], "\\")
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_CASE_INSENSITIVE_NO_MATCH):
+			#
+				_return = column.notilike(condition['value'], "\\")
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH):
+			#
+				_return = column.like(condition['value'], "\\")
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_CASE_SENSITIVE_NO_MATCH):
+			#
+				_return = column.notlike(condition['value'], "\\")
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_EXACT_MATCH):
+			#
+				_return = (column == condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_EXACT_NO_MATCH):
+			#
+				_return = (column != condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_GREATER_THAN_MATCH):
+			#
+				_return = (column > condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH):
+			#
+				_return = (column >= condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_IN_LIST_MATCH):
+			#
+				_return = column.in_(condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_LESS_THAN_MATCH):
+			#
+				_return = (column < condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH):
+			#
+				_return = (column <= condition['value'])
+			#
+			elif (condition['type'] == ConditionDefinition.TYPE_NOT_IN_LIST_MATCH):
+			#
+				_return = column.notin_(condition['value'])
+			#
+		#
+
+		return _return
+	#
+
+	def _get_conditions(self, db_column_definition):
+	#
+		"""
+Returns the SQLalchemy condition clause corresponding to this definition
+instance.
+
+:param db_column_definition: Database class or column definition
+
+:return: (object) SQLalchemy condition clause; None if empty
+		"""
+
+		_return = None
+
+		condition_clauses = [ ]
+
+		for condition in self.conditions:
+		#
+			condition_clause = self._get_condition(db_column_definition, condition)
+			if (condition_clause is not None): condition_clauses.append(condition_clause)
+		#
+
+		condition_clauses_count = len(condition_clauses)
+
+		if (condition_clauses_count == 1): _return = condition_clauses[0]
+		elif (condition_clauses_count > 1):
+		#
+			_return = (and_(*condition_clauses)
+			           if (self.concatenation == ConditionDefinition.AND) else
+			           or_(*condition_clauses)
+			          )
+		#
+
+		return _return
+	#
+
+	def get_conditions_count(self):
+	#
+		"""
+Returns the number of defined conditions.
+
+:return: (int) Conditions count
+:since:  v0.1.02
+		"""
+
+		return len(self.conditions)
 	#
 
 	def set_concatenation(self, concatenation):
@@ -369,21 +529,21 @@ Sets the concatenation used for this condition definition.
 	#
 
 	@staticmethod
-	def _get_instance_column(instance, name):
+	def _get_db_column(db_column_definition, name):
 	#
 		"""
-Returns a column from the given instance.
+Returns a column from the given definition.
 
-:param instance: Database instance
+:param db_column_definition: Database class or column definition
 :param name: Column name
 
 :return: (object) Database instance column; None if not defined
 		"""
 
-		return (instance._get_db_column(name)
-			    if (hasattr(instance, "_get_db_column")) else
-			    getattr(instance, name)
-			   )
+		return (db_column_definition.get_db_column(name)
+		        if (hasattr(db_column_definition, "get_db_column")) else
+		        getattr(db_column_definition, name)
+		       )
 	#
 #
 

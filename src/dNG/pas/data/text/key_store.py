@@ -19,6 +19,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 """
 
 from random import randrange
+from sqlalchemy.sql.expression import and_
 from time import time
 
 from dNG.data.json_resource import JsonResource
@@ -177,7 +178,11 @@ Load KeyStore entry from database.
 		#
 			if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
 			#
-				if (connection.query(_DbKeyStore).filter(_DbKeyStore.validity_end_time <= int(time())).delete() > 0):
+				validity_ended_condition = and_(_DbKeyStore.validity_end_time > 0,
+				                                _DbKeyStore.validity_end_time < int(time())
+				                               )
+
+				if (connection.query(_DbKeyStore).filter(validity_ended_condition).delete() > 0):
 				#
 					connection.optimize_random(_DbKeyStore)
 				#

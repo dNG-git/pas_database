@@ -60,6 +60,10 @@ Constructor __init__(Instance)
 :since: v0.1.00
 		"""
 
+		self._db_context_sort_definition = { }
+		"""
+Context specific sort definition instances
+		"""
 		self._db_sort_definition = None
 		"""
 Sort definition instance
@@ -175,6 +179,8 @@ python.org: Exit the runtime context related to this object.
 		"""
 python.org: Called to create a new instance of class cls.
 
+:param cls: Python class
+
 :return: (object) Instance object
 :since:  v0.1.00
 		"""
@@ -204,12 +210,13 @@ Applies the sort order to the given SQLAlchemy query instance.
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 		_return = query
 
-		sort_definition = (self._get_default_sort_definition(context)
-		                   if (self._db_sort_definition is None) else
-		                   self._db_sort_definition
-		                  )
+		sort_definition = self._get_db_sort_definition(context)
 
-		if (sort_definition is not None): _return = sort_definition.apply(self, query)
+		if (sort_definition is not None):
+		#
+			with self: _return = sort_definition.apply(self.local.db_instance.__class__, query)
+		#
+
 		return _return
 	#
 
@@ -361,26 +368,6 @@ Returns the requested attributes.
 		return _return
 	#
 
-	def _get_db_column(self, attribute):
-	#
-		"""
-Returns the SQLAlchemy column for the requested attribute.
-
-:param attribute: Requested attribute
-
-:return: (object) SQLAlchemy column; None if undefined
-:since:  v0.1.00
-		"""
-
-		with self:
-		#
-			return (getattr(self.local.db_instance.__class__, attribute)
-			        if (hasattr(self.local.db_instance.__class__, attribute)) else
-			        self._get_unknown_db_column(attribute)
-			       )
-		#
-	#
-
 	def _get_db_instance(self):
 	#
 		"""
@@ -391,6 +378,27 @@ Returns the actual database entry instance.
 		"""
 
 		with self: return self.local.db_instance
+	#
+
+	def _get_db_sort_definition(self, context = None):
+	#
+		"""
+Returns the sort definition based in the given context.
+
+:param context: Sort definition context
+
+:return: (object) SortDefinition instance if specified; None otherwise
+:since:  v0.1.03
+		"""
+
+		_return = None
+
+		if (context is None): _return = self._db_sort_definition
+		elif (context in self._db_context_sort_definition): _return = self._db_context_sort_definition[context]
+
+		if (_return is None): _return = self._get_default_sort_definition(context)
+
+		return _return
 	#
 
 	def _get_default_sort_definition(self, context = None):
@@ -420,21 +428,6 @@ Returns the data for the requested attribute not defined for this instance.
 		"""
 
 		return None
-	#
-
-	def _get_unknown_db_column(self, attribute):
-	#
-		"""
-Returns the SQLAlchemy column for the requested attribute not defined for
-this instance main entity.
-
-:param attribute: Requested attribute
-
-:return: (object) SQLAlchemy column
-:since:  v0.1.00
-		"""
-
-		raise ValueException("Given attribute '{0}' is not defined for this database instance".format(attribute))
 	#
 
 	def _insert(self):
@@ -562,7 +555,7 @@ Sets values given as keyword arguments to this method.
 		raise NotImplementedException()
 	#
 
-	def set_sort_definition(self, sort_definition):
+	def set_sort_definition(self, sort_definition, context = None):
 	#
 		"""
 Sets the sort definition list.
@@ -575,7 +568,9 @@ Sets the sort definition list.
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 
 		if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
-		self._db_sort_definition = sort_definition
+
+		if (context is None): self._db_sort_definition = sort_definition
+		else: self._db_context_sort_definition[context] = sort_definition
 	#
 
 	def _update(self):

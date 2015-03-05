@@ -22,6 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import reconstructor
 
 from dNG.pas.database.connection import Connection
+from dNG.pas.runtime.value_exception import ValueException
 
 class Abstract(declarative_base()):
 #
@@ -65,6 +66,42 @@ from the database or otherwise reconstituted.
 		"""
 
 		self.__init__()
+	#
+
+	@classmethod
+	def get_db_column(cls, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute.
+
+:param cls: Python class
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column; None if undefined
+:since:  v0.1.02
+		"""
+
+		return (getattr(cls, attribute)
+		        if (hasattr(cls, attribute)) else
+		        cls.get_unknown_db_column(attribute)
+		       )
+	#
+
+	@classmethod
+	def get_unknown_db_column(cls, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute not defined for
+this instance main entity.
+
+:param cls: Python class
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column
+:since:  v0.1.02
+		"""
+
+		raise ValueException("Given attribute '{0}' is not defined for '{1}".format(attribute, cls.__name__))
 	#
 
 	@staticmethod
