@@ -338,7 +338,7 @@ Returns the data for the requested attribute.
 
 :param attribute: Requested attribute
 
-:return: (dict) Value for the requested attribute; None if undefined
+:return: (mixed) Value for the requested attribute; None if undefined
 :since:  v0.1.00
 		"""
 
