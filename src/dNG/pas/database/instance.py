@@ -185,12 +185,20 @@ python.org: Called to create a new instance of class cls.
 :since:  v0.1.00
 		"""
 
-		db_instance = (kwargs['db_instance'] if ("db_instance" in kwargs) else None)
+		db_instance = kwargs.get("db_instance")
 		if (db_instance is None): db_instance = (args[0] if (len(args) > 0) else None)
-		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class) if (isinstance(db_instance, Abstract) and db_instance.db_instance_class is not None) else None)
+
+		db_instance_class = (NamedLoader.get_class(db_instance.db_instance_class)
+		                     if (isinstance(db_instance, Abstract) and db_instance.db_instance_class is not None) else
+		                     None
+		                    )
 
 		if (db_instance_class is None or cls == db_instance_class): _return = object.__new__(cls)
-		else: _return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
+		else:
+		#
+			_return = db_instance_class.__new__(db_instance_class, *args, **kwargs)
+			_return.__init__(*args, **kwargs)
+		#
 
 		return _return
 	#
