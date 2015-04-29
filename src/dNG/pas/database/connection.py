@@ -23,9 +23,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 from os import path
 from random import randrange
 from sqlalchemy.engine import engine_from_config
-from sqlalchemy.event import listen
-from sqlalchemy.orm.interfaces import EXT_CONTINUE
-from sqlalchemy.orm.mapper import configure_mappers, Mapper
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 from threading import current_thread, local
@@ -57,10 +54,6 @@ class Connection(object):
 
 	# pylint: disable=unused-argument
 
-	_event_bound = False
-	"""
-True if the SQLAlchemy "translate_row" event has been bound.
-	"""
 	_instance_lock = InstanceLock()
 	"""
 Thread safety lock
@@ -108,7 +101,7 @@ happened.
 SQLAlchemy session
 		"""
 
-		if ((not Connection._event_bound) or Connection._sa_scoped_session is None):
+		if (Connection._sa_scoped_session is None):
 		#
 			with Connection._instance_lock:
 			# Thread safety
@@ -120,12 +113,6 @@ SQLAlchemy session
 					                           )
 
 					Connection._sa_scoped_session = scoped_session(sessionmaker(engine))
-				#
-
-				if (not Connection._event_bound):
-				#
-					listen(Mapper, "translate_row", Connection._sa_on_translate_row)
-					Connection._event_bound = True
 				#
 			#
 		#
@@ -540,30 +527,6 @@ Releases a previously acquired lock.
 		"""
 
 		if (Connection.is_serialized()): Connection._serialized_lock.release()
-	#
-
-	@staticmethod
-	def _sa_on_translate_row(mapper, context, row):
-	#
-		"""
-sqlalchemy.org: Perform pre-processing on the given result row and return a
-new row instance.
-
-:param mapper: The Mapper which is the target of this event.
-:param context: The QueryContext, which includes a handle to the current
-                Query in progress as well as additional state information.
-:param mapper: The result row being handled.
-
-:since:  v0.1.00
-		"""
-
-		if (mapper.polymorphic_map is not None and mapper.polymorphic_on in row):
-		#
-			common_name = "dNG.pas.database.instances.{0}".format(row[mapper.polymorphic_on])
-			if ((not NamedLoader.is_defined(common_name, False)) and NamedLoader.is_defined(common_name)): configure_mappers()
-		#
-
-		return EXT_CONTINUE
 	#
 #
 
