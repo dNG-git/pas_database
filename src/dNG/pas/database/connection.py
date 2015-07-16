@@ -423,7 +423,7 @@ Check and read settings if needed.
 
 					url_elements = urlsplit(url)
 
-					Settings.set("pas_database_backend_name", url_elements.scheme.split("+")[0])
+					Settings.set("x_pas_database_backend_name", url_elements.scheme.split("+")[0])
 
 					if (url_elements.username is None
 					    and url_elements.password is None
@@ -461,7 +461,7 @@ Returns the connection backend.
 		"""
 
 		if (not Connection._settings_initialized): Connection._ensure_settings()
-		return Settings.get("pas_database_backend_name")
+		return Settings.get("x_pas_database_backend_name")
 	#
 
 	@staticmethod
