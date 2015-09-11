@@ -132,8 +132,8 @@ class.
 			#
 				re_object = re.compile("schema\\_\\d+\\.sql$", re.I)
 
-				schema_version_files = { filename: path.join(schema_directory_path, filename)
-				                         for filename in os.listdir(schema_directory_path) if (re_object.match(filename) is not None)
+				schema_version_files = { file_name: path.join(schema_directory_path, file_name)
+				                         for file_name in os.listdir(schema_directory_path) if (re_object.match(file_name) is not None)
 				                       }
 			#
 
