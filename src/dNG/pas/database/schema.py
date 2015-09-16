@@ -51,6 +51,10 @@ The "Schema" class provides methods to handle versions and upgrades.
              Mozilla Public License, v. 2.0
 	"""
 
+	_DB_INSTANCE_CLASS = _DbSchemaVersion
+	"""
+SQLAlchemy database instance class to initialize for new instances.
+	"""
 	RE_ESCAPED = re.compile("(\\\\+)$")
 	"""
 RegExp to find escape characters
@@ -86,8 +90,6 @@ Sets values given as keyword arguments to this method.
 
 :since: v0.1.00
 		"""
-
-		self._ensure_thread_local_instance(_DbSchemaVersion)
 
 		with self:
 		#
@@ -215,6 +217,7 @@ Applies the given SQL file.
 :since: v0.1.00
 		"""
 
+		file_content = None
 		file_object = File()
 
 		if (file_object.open(file_path_name, True, "r")):
@@ -222,7 +225,8 @@ Applies the given SQL file.
 			file_content = Binary.str(file_object.read())
 			file_object.close()
 		#
-		else: raise IOException("Schema file given is invalid")
+
+		if (file_content is None): raise IOException("Schema file given is invalid")
 
 		file_content = file_content.replace("__db_prefix__", _DbAbstract.get_table_prefix())
 		file_content = Schema.RE_SQL_COMMENT_LINE.sub("", file_content)

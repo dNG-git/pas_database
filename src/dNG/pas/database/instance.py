@@ -50,6 +50,11 @@ instance.
 
 	# pylint: disable=unused-argument
 
+	_DB_INSTANCE_CLASS = None
+	"""
+SQLAlchemy database instance class to initialize for new instances.
+	"""
+
 	def __init__(self, db_instance = None):
 	#
 		"""
@@ -114,12 +119,10 @@ python.org: Enter the runtime context related to this object.
 				#
 
 				self.local.context_depth += 1
+				self._ensure_thread_local_instance()
 
-				if (hasattr(self.local, "db_instance")
-				    and self.local.db_instance is not None
-				   ): self._ensure_attached_instance()
+				if (self.local.db_instance is not None): self._ensure_attached_instance()
 				elif (self.is_reloadable()): self.reload()
-				else: self.local.db_instance = None
 			#
 		#
 		except:
@@ -303,7 +306,7 @@ Checks for an active transaction or begins one.
 		#
 	#
 
-	def _ensure_thread_local_instance(self, cls):
+	def _ensure_thread_local_instance(self):
 	#
 		"""
 Checks for an initialized SQLAlchemy database instance or create one.
@@ -314,8 +317,8 @@ Checks for an initialized SQLAlchemy database instance or create one.
 		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance is None):
 		#
 			self.local.db_instance = (None
-			                          if (self.is_reloadable()) else
-			                          cls()
+			                          if (self.__class__._DB_INSTANCE_CLASS is None or self.is_reloadable()) else
+			                          self.__class__._DB_INSTANCE_CLASS()
 			                         )
 		#
 	#
@@ -488,7 +491,7 @@ Returns true if the instance is already saved in the database.
 
 		# pylint: disable=maybe-no-member
 
-		return inspect(self.local.db_instance).has_identity
+		return (self.local.db_instance is not None and inspect(self.local.db_instance).has_identity)
 	#
 
 	def is_reloadable(self):
@@ -609,6 +612,25 @@ database instances with an given class.
 
 		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
 		return InstanceIterator(entity, result, True, cls, *args, **kwargs)
+	#
+
+	@staticmethod
+	def _ensure_db_class(cls, db_instance):
+	#
+		"""
+Checks the SQLAlchemy database instance to be an expected one while
+auto-loading it.
+
+:param cls: Expected encapsulating database instance class
+:param db_instance: Encapsulated database instance
+
+:since: v0.1.02
+		"""
+
+		if (db_instance is not None
+		    and cls._DB_INSTANCE_CLASS is not None
+		    and (not isinstance(db_instance, cls._DB_INSTANCE_CLASS))
+		   ): raise ValueException("Given encapsulated database instance is not valid for this encapsulating one")
 	#
 
 	@classmethod

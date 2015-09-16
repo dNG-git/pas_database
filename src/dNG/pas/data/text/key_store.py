@@ -49,6 +49,11 @@ Database based encoded key-value store.
 
 	# pylint: disable=maybe-no-member
 
+	_DB_INSTANCE_CLASS = _DbKeyStore
+	"""
+SQLAlchemy database instance class to initialize for new instances.
+	"""
+
 	def __init__(self, db_instance = None):
 	#
 		"""
@@ -94,6 +99,19 @@ Returns the values originally given as a dict to this KeyStore instance.
 		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
 		if (_return is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
 		return _return
+	#
+
+	def is_reloadable(self):
+	#
+		"""
+Returns true if the instance can be reloaded automatically in another
+thread.
+
+:return: (bool) True if reloadable
+:since:  v0.1.00
+		"""
+
+		return (self.db_id is not None)
 	#
 
 	def is_valid(self):
