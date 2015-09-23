@@ -181,16 +181,19 @@ Sets the values given as a dict as the value of this KeyStore instance.
 	#
 
 	@staticmethod
-	def _load(db_instance):
+	def _load(cls, db_instance):
 	#
 		"""
 Load KeyStore entry from database.
 
+:param cls: Expected encapsulating database instance class
 :param db_instance: SQLAlchemy database instance
 
 :return: (object) KeyStore instance on success
 :since:  v0.1.00
 		"""
+
+		_return = None
 
 		with Connection.get_instance() as connection:
 		#
@@ -206,19 +209,25 @@ Load KeyStore entry from database.
 				#
 			#
 
-			_return = (None if (db_instance is None) else KeyStore(db_instance))
-			if (_return is not None and (not _return.is_valid())): _return = None
+			if (db_instance is not None):
+			#
+				Instance._ensure_db_class(cls, db_instance)
+
+				_return = KeyStore(db_instance)
+				if (not _return.is_valid()): _return = None
+			#
 		#
 
 		return _return
 	#
 
-	@staticmethod
-	def load_id(_id):
+	@classmethod
+	def load_id(cls, _id):
 	#
 		"""
 Load KeyStore value by ID.
 
+:param cls: Expected encapsulating database instance class
 :param _id: KeyStore ID
 
 :return: (object) KeyStore instance on success
@@ -227,17 +236,19 @@ Load KeyStore value by ID.
 
 		if (_id is None): raise NothingMatchedException("KeyStore ID is invalid")
 
-		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).get(_id))
+		with Connection.get_instance() as connection: _return = KeyStore._load(cls, connection.query(_DbKeyStore).get(_id))
+
 		if (_return is None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
 	#
 
-	@staticmethod
-	def load_key(key):
+	@classmethod
+	def load_key(cls, key):
 	#
 		"""
 Load KeyStore value by key.
 
+:param cls: Expected encapsulating database instance class
 :param key: KeyStore key
 
 :return: (object) KeyStore instance on success
@@ -246,7 +257,8 @@ Load KeyStore value by key.
 
 		if (key is None): raise NothingMatchedException("KeyStore key is invalid")
 
-		with Connection.get_instance() as connection: _return = KeyStore._load(connection.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+		with Connection.get_instance() as connection: _return = KeyStore._load(cls, connection.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+
 		if (_return is None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
 		return _return
 	#

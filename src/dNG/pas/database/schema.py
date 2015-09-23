@@ -259,19 +259,18 @@ Applies the given SQL file.
 		#
 	#
 
-	@staticmethod
-	def load_latest_name_entry(name):
+	@classmethod
+	def load_latest_name_entry(cls, name):
 	#
 		"""
 Load the schema entry with the highest version for the given name.
 
+:param cls: Expected encapsulating database instance class
 :param name: Schema name
 
 :return: (object) Schema instance on success
 :since:  v0.1.00
 		"""
-
-		_return = None
 
 		with Connection.get_instance() as connection:
 		#
@@ -280,10 +279,10 @@ Load the schema entry with the highest version for the given name.
 			db_instance = db_query.first()
 
 			if (db_instance is None): raise NothingMatchedException("Schema name '{0}' is invalid".format(name))
-			_return = Schema(db_instance)
-		#
+			Instance._ensure_db_class(cls, db_instance)
 
-		return _return
+			return Schema(db_instance)
+		#
 	#
 #
 
