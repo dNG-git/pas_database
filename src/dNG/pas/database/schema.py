@@ -170,7 +170,7 @@ class.
 							for schema_version in schema_versions:
 							#
 								Schema._apply_sql_file(connection, schema_version_files["schema_{0:d}.sql".format(schema_version)])
-								LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, target_version))
+								LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, schema_version))
 
 								schema = Schema()
 								schema.set_data_attributes(name = instance_class_name, version = schema_version)
