@@ -96,7 +96,7 @@ Local data handle
 The LogHandler is called whenever debug messages should be logged or errors
 happened.
 		"""
-		self.session = None
+		self._sa_session = None
 		"""
 SQLAlchemy session
 		"""
@@ -117,7 +117,7 @@ SQLAlchemy session
 			#
 		#
 
-		self.session = Connection._sa_scoped_session
+		self._sa_session = Connection._sa_scoped_session
 		if (self.log_handler is not None and Settings.get("pas_database_threaded_debug", False)): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__init__()- reporting: Thread ID {1:d}", self, current_thread().ident, context = "pas_database")
 	#
 
@@ -129,16 +129,16 @@ Destructor __del__(Connection)
 :since: v0.1.00
 		"""
 
-		if (self.session is not None):
+		if (self._sa_session is not None):
 		#
 			if (self.log_handler is not None):
 			#
-				if (len(self.session.deleted) > 0): self.log_handler.warning("{0!r} has deleted instances to be rolled back", self, context = "pas_database")
-				if (len(self.session.dirty) > 0): self.log_handler.warning("{0!r} has dirty instances to be rolled back", self, context = "pas_database")
-				if (len(self.session.new) > 0): self.log_handler.warning("{0!r} has new instances to be ignored", self, context = "pas_database")
+				if (len(self._sa_session.deleted) > 0): self.log_handler.warning("{0!r} has deleted instances to be rolled back", self, context = "pas_database")
+				if (len(self._sa_session.dirty) > 0): self.log_handler.warning("{0!r} has dirty instances to be rolled back", self, context = "pas_database")
+				if (len(self._sa_session.new) > 0): self.log_handler.warning("{0!r} has new instances to be ignored", self, context = "pas_database")
 			#
 
-			self.session.remove()
+			self._sa_session.remove()
 		#
 	#
 
@@ -180,8 +180,12 @@ class tree for self).
 :since:  v0.1.00
 		"""
 
-		if (self.session is None or (not hasattr(self.session, name))): raise TypeException("SQLAlchemy session does not implement '{0}'".format(name))
-		return getattr(self.session, name)
+		if (name == "_sa_session"
+		    or self._sa_session is None
+		    or (not hasattr(self._sa_session, name))
+		   ): raise TypeException("SQLAlchemy session does not implement '{0}'".format(name))
+
+		return getattr(self._sa_session, name)
 	#
 
 	def begin(self):
@@ -196,8 +200,8 @@ sqlalchemy.org: Begin a transaction on this Session.
 
 		# SQLAlchemy starts the most outer transaction itself by default
 		if (self.local.transactions < 0): self.local.transactions = 0
-		elif (Settings.get("pas_database_transaction_use_native_nested", False)): self.session.begin_nested()
-		else: self.session.begin(subtransactions = True)
+		elif (Settings.get("pas_database_transaction_use_native_nested", False)): self._sa_session.begin_nested()
+		else: self._sa_session.begin(subtransactions = True)
 
 		self.local.transactions += 1
 		if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' started", self, self.local.transactions, context = "pas_database")
@@ -215,7 +219,7 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 
 		if (self.local.transactions > 0):
 		#
-			self.session.commit()
+			self._sa_session.commit()
 
 			if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' committed", self, self.local.transactions, context = "pas_database")
 
@@ -296,10 +300,10 @@ Exits the connection context.
 		#
 			if (self.local.context_depth < 1 and self.get_transaction_depth() < 1):
 			#
-				if (exc_type is None and exc_value is None): self.session.commit()
-				else: self.session.rollback()
+				if (exc_type is None and exc_value is None): self._sa_session.commit()
+				else: self._sa_session.rollback()
 
-				self.session.expunge_all()
+				self._sa_session.expunge_all()
 				if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- reporting: Cleared session instances", self, context = "pas_database")
 			#
 		#
@@ -316,7 +320,7 @@ Returns the active SQLAlchemy session.
 :since: v0.1.00
 		"""
 
-		return self.session
+		return self._sa_session
 	#
 
 	def get_transaction_depth(self):
@@ -371,11 +375,11 @@ sqlalchemy.org: Rollback the current transaction in progress.
 		#
 			if ((not Settings.get("pas_database_transaction_use_native_nested", False)) and self.local.transactions > 1):
 			#
-				for _ in range(1, self.local.transactions): self.session.rollback()
+				for _ in range(1, self.local.transactions): self._sa_session.rollback()
 				self.local.transactions = 1
 			#
 
-			self.session.rollback()
+			self._sa_session.rollback()
 
 			if (self.log_handler is not None): self.log_handler.debug("{0!r} transaction '{1:d}' rolled back", self, self.local.transactions, context = "pas_database")
 

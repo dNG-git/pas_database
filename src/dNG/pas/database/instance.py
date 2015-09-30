@@ -334,9 +334,9 @@ cleanup database connections held by this instance.
 
 		# pylint: disable=protected-access
 
-		if (self.local.context_depth < 1):
+		if (getattr(self.local, "context_depth", 0) == 1):
 		#
-			Connection._release()
+			if (Connection._is_acquired()): Connection._release()
 			self.local.connection = None
 		#
 		else: self.local.context_depth -= 1
