@@ -532,6 +532,27 @@ Releases a previously acquired lock.
 
 		if (Connection.is_serialized()): Connection._serialized_lock.release()
 	#
+
+	@staticmethod
+	def wrap_callable(_callable):
+	#
+		"""
+Wraps a callable to be executed with an established database connection.
+
+:param callable: Wrapped code
+
+:return: (object) Proxy method
+:since:  v0.1.02
+		"""
+
+		def proxymethod(*args, **kwargs):
+		#
+			database = Connection.get_instance()
+			with database: return _callable(*args, **kwargs)
+		#
+
+		return proxymethod
+	#
 #
 
 ##j## EOF
