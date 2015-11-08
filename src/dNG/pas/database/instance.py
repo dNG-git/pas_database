@@ -316,9 +316,11 @@ Checks for an initialized SQLAlchemy database instance or create one.
 
 		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance is None):
 		#
+			db_class = Instance.get_db_class(self.__class__)
+
 			self.local.db_instance = (None
-			                          if (self.__class__._DB_INSTANCE_CLASS is None or self.is_reloadable()) else
-			                          self.__class__._DB_INSTANCE_CLASS()
+			                          if (db_class is None or self.is_reloadable()) else
+			                          db_class()
 			                         )
 		#
 	#
@@ -628,9 +630,44 @@ auto-loading it.
 		"""
 
 		if (db_instance is not None
-		    and cls._DB_INSTANCE_CLASS is not None
+		    and getattr(cls, "_DB_INSTANCE_CLASS") is not None
 		    and (not isinstance(db_instance, cls._DB_INSTANCE_CLASS))
 		   ): raise ValueException("Given encapsulated database instance is not valid for this encapsulating one")
+	#
+
+	@staticmethod
+	def get_db_class(cls):
+	#
+		"""
+Returns the database class for the encapsulating database class given.
+
+:param cls: Encapsulating database class
+
+:return: (object) Database class; None if not defined
+:since:  v0.1.02
+		"""
+
+		return getattr(cls, "_DB_INSTANCE_CLASS", None)
+	#
+
+	@staticmethod
+	def get_db_class_query(cls):
+	#
+		"""
+Returns the query instance for the encapsulating database class given.
+
+:param cls: Encapsulating database class
+
+:since: v0.1.02
+		"""
+
+		db_class = Instance.get_db_class(cls)
+		if (db_class is None): raise ValueException("Encapsulating database class is not valid")
+
+		with Connection.get_instance() as connection:
+		#
+			return connection.query(db_class)
+		#
 	#
 
 	@classmethod
