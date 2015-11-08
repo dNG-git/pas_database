@@ -236,7 +236,7 @@ Load KeyStore value by ID.
 
 		if (_id is None): raise NothingMatchedException("KeyStore ID is invalid")
 
-		with Connection.get_instance() as connection: _return = KeyStore._load(cls, connection.query(_DbKeyStore).get(_id))
+		with Connection.get_instance(): _return = KeyStore._load(cls, Instance.get_db_class_query(cls).get(_id))
 
 		if (_return is None): raise NothingMatchedException("KeyStore ID '{0}' not found".format(_id))
 		return _return
@@ -257,7 +257,12 @@ Load KeyStore value by key.
 
 		if (key is None): raise NothingMatchedException("KeyStore key is invalid")
 
-		with Connection.get_instance() as connection: _return = KeyStore._load(cls, connection.query(_DbKeyStore).filter(_DbKeyStore.key == key).first())
+		with Connection.get_instance():
+		#
+			_return = KeyStore._load(cls,
+			                         Instance.get_db_class_query(cls).filter(_DbKeyStore.key == key).first()
+			                        )
+		#
 
 		if (_return is None): raise NothingMatchedException("KeyStore key '{0}' not found".format(key))
 		return _return

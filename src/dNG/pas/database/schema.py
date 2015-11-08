@@ -272,9 +272,9 @@ Load the schema entry with the highest version for the given name.
 :since:  v0.1.00
 		"""
 
-		with Connection.get_instance() as connection:
+		with Connection.get_instance():
 		#
-			db_query = connection.query(_DbSchemaVersion).filter(_DbSchemaVersion.name == name)
+			db_query = Instance.get_db_class_query(cls).filter(_DbSchemaVersion.name == name)
 			db_query = db_query.order_by(_DbSchemaVersion.version.desc()).limit(1)
 			db_instance = db_query.first()
 
