@@ -18,6 +18,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+from sqlalchemy.inspection import inspect
+
 from dNG.pas.database.connection import Connection
 from dNG.pas.runtime.iterator import Iterator
 
@@ -101,14 +103,38 @@ python.org: Return the next item from the container.
 :since:  v0.1.00
 		"""
 
+		db_instance = None
+
 		if (self.buffered):
 		#
 			if (len(self.result) < 1): raise StopIteration()
-			_return = (self.result.pop(0) if (self.instance_class is None) else self.instance_class(self.result.pop(0), *self.args, **self.kwargs))
+			db_instance = self.result.pop(0)
 		#
-		else: _return = (next(self.result) if (self.instance_class is None) else self.instance_class(next(self.result), *self.args, **self.kwargs))
+		else: db_instance = next(self.result)
 
-		return _return
+		if (self.instance_class is None
+		    or (not issubclass(self.instance_class.get_db_class(self.instance_class),
+		                       db_instance.__class__
+		                      )
+		       )
+		   ):
+		#
+			instance_state = inspect(db_instance)
+
+			if (len(instance_state.expired_attributes) > 0):
+			#
+				db_instance = (Connection.get_instance()
+				               .query(db_instance.__class__)
+				               .populate_existing()
+				               .get(instance_state.identity)
+				              )
+			#
+		#
+
+		return (db_instance
+		        if (self.instance_class is None) else
+		        self.instance_class(db_instance, *self.args, **self.kwargs)
+		       )
 	#
 #
 
