@@ -77,7 +77,24 @@ Returns the SQLAlchemy column for the requested attribute.
 :param cls: Python class
 :param attribute: Requested attribute
 
-:return: (object) SQLAlchemy column; None if undefined
+:return: (object) SQLAlchemy column
+:since:  v0.1.02
+		"""
+
+		return cls._get_db_column(cls, attribute)
+	#
+
+	@staticmethod
+	def _get_db_column(cls, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute of the given
+class.
+
+:param cls: Python class
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column
 :since:  v0.1.02
 		"""
 
@@ -92,7 +109,24 @@ Returns the SQLAlchemy column for the requested attribute.
 	#
 		"""
 Returns the SQLAlchemy column for the requested attribute not defined for
-this instance main entity.
+this entity class.
+
+:param cls: Python class
+:param attribute: Requested attribute
+
+:return: (object) SQLAlchemy column
+:since:  v0.1.02
+		"""
+
+		return cls._get_unknown_db_column(cls, attribute)
+	#
+
+	@staticmethod
+	def _get_unknown_db_column(cls, attribute):
+	#
+		"""
+Returns the SQLAlchemy column for the requested attribute not defined for
+the given entity class.
 
 :param cls: Python class
 :param attribute: Requested attribute
