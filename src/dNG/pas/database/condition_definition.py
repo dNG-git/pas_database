@@ -381,7 +381,7 @@ Clears the current condition list.
 		self.conditions = [ ]
 	#
 
-	def get_concatenation(self, concatenation):
+	def get_concatenation(self):
 	#
 		"""
 Returns the concatenation used for this condition definition.
