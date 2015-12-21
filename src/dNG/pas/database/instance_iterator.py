@@ -70,15 +70,13 @@ instance
 		"""
 		self.result = None
 		"""
-Instance class encapsulating the database instance
+Results being interated
 		"""
 
 		with Connection.get_instance() as connection:
 		#
-			self.result = (list(connection.query(entity).instances(cursor))
-			               if (buffered) else
-			               connection.query(entity).instances(cursor)
-			              )
+			if (buffered): self._init_buffered_results(connection, entity, cursor)
+			else: self.result = connection.query(entity).instances(cursor)
 		#
 	#
 
@@ -108,9 +106,31 @@ python.org: Return the next item from the container.
 		if (self.buffered):
 		#
 			if (len(self.result) < 1): raise StopIteration()
-			db_instance = self.result.pop(0)
+			return self.result.pop(0)
 		#
-		else: db_instance = next(self.result)
+		else:
+		#
+			db_instance = next(self.result)
+
+			return (db_instance
+			        if (self.instance_class is None) else
+			        self.instance_class(db_instance, *self.args, **self.kwargs)
+			       )
+		#
+	#
+
+	def _ensure_populated_db_instance(self, db_instance):
+	#
+		"""
+Loads and initializes instances for the buffer.
+
+:param entity: SQLAlchemy database entity
+:param cursor: SQLAlchemy result cursor
+
+:since: v0.1.00
+		"""
+
+		_return = db_instance
 
 		if (self.instance_class is None
 		    or (not issubclass(self.instance_class.get_db_class(self.instance_class),
@@ -123,18 +143,39 @@ python.org: Return the next item from the container.
 
 			if (len(instance_state.expired_attributes) > 0):
 			#
-				db_instance = (Connection.get_instance()
-				               .query(db_instance.__class__)
-				               .populate_existing()
-				               .get(instance_state.identity)
-				              )
+				_return = (Connection.get_instance()
+				           .query(db_instance.__class__)
+				           .populate_existing()
+				           .get(instance_state.identity)
+				          )
 			#
 		#
 
-		return (db_instance
-		        if (self.instance_class is None) else
-		        self.instance_class(db_instance, *self.args, **self.kwargs)
-		       )
+		return _return
+	#
+
+	def _init_buffered_results(self, connection, entity, cursor):
+	#
+		"""
+Loads and initializes instances for the buffer.
+
+:param entity: SQLAlchemy database entity
+:param cursor: SQLAlchemy result cursor
+
+:since: v0.1.00
+		"""
+
+		self.result = [ ]
+
+		for db_instance in connection.query(entity).instances(cursor):
+		#
+			db_instance = self._ensure_populated_db_instance(db_instance)
+
+			self.result.append(db_instance
+			                   if (self.instance_class is None) else
+			                   self.instance_class(db_instance, *self.args, **self.kwargs)
+			                  )
+		#
 	#
 #
 
