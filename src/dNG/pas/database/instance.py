@@ -456,6 +456,34 @@ Insert the instance into the database.
 		if (inspect(self.local.db_instance).transient): self.local.connection.add(self.local.db_instance)
 	#
 
+	def is_data_attribute_defined(self, attribute):
+	#
+		"""
+Checks the given attribute if it is defined for the entity.
+
+:param attribute: Requested attribute
+
+:return: (bool) Returns true if the attribute is defined
+:since:  v0.1.02
+		"""
+
+		_return = False
+
+		db_class = Instance.get_db_class(self.__class__)
+
+		if (issubclass(db_class, Abstract)):
+		#
+			try:
+			#
+				db_class.get_db_column(attribute)
+				_return = True
+			#
+			except ValueException: pass
+		#
+
+		return _return
+	#
+
 	def is_data_attribute_none(self, *args):
 	#
 		"""
