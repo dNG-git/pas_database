@@ -124,6 +124,26 @@ python.org: Exit the runtime context related to this object.
 
 		return False
 	#
+
+	@staticmethod
+	def wrap_callable(_callable):
+	#
+		"""
+Wraps a callable to be executed within an transaction context.
+
+:param callable: Wrapped code
+
+:return: (object) Proxy method
+:since:  v0.1.02
+		"""
+
+		def proxymethod(*args, **kwargs):
+		#
+			with TransactionContext(): return _callable(*args, **kwargs)
+		#
+
+		return proxymethod
+	#
 #
 
 ##j## EOF
