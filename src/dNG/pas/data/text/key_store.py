@@ -62,7 +62,6 @@ Constructor __init__(KeyStore)
 :since: v0.1.00
 		"""
 
-		if (db_instance is None): db_instance = _DbKeyStore()
 		Instance.__init__(self, db_instance)
 
 		self.db_id = (None if (db_instance is None) else self.get_id())
@@ -79,7 +78,7 @@ Returns the ID of this instance.
 :since:  v0.1.00
 	"""
 
-	get_key = Instance._wrap_getter("id")
+	get_key = Instance._wrap_getter("key")
 	"""
 Returns the key of this instance.
 
