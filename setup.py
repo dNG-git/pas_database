@@ -38,7 +38,7 @@ from os import path
 
 with TemporaryDirectory(dir = ".") as build_directory:
 #
-	parameters = { "install_data_plain_copy_extensions": "sql",
+	parameters = { "install_data_plain_copy_extensions": "json,sql",
 	               "pasDatabaseVersion": get_version()
 	             }
 
@@ -52,10 +52,12 @@ with TemporaryDirectory(dir = ".") as build_directory:
 	      version = get_version(),
 	      description = "Python Application Services",
 	      long_description = """"pas_database" is an adapter and abstraction layer for SQLAlchemy.""",
-	      author = "direct Netware Group",
+	      author = "direct Netware Group et al.",
 	      author_email = "web@direct-netware.de",
 	      license = "MPL2",
 	      url = "https://www.direct-netware.de/redirect?pas;database",
+
+	      platforms = [ "any" ],
 
 	      package_dir = { "": _build_path },
 	      packages = [ "dNG" ],
