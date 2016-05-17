@@ -36,6 +36,7 @@ from dNG.pas.runtime.type_exception import TypeException
 from .instance import Instance
 from .nothing_matched_exception import NothingMatchedException
 from .transaction_context import TransactionContext
+from dNG.data.json_resource import JsonResource
 
 class Schema(Instance):
 #
@@ -120,7 +121,7 @@ class.
 
 		instance_class_name = instance_class.__name__
 
-		with Connection.get_instance() as connection, HookContext("dNG.pas.database.{0}.applySchema".format(instance_class_name)):
+		with Connection.get_instance(), HookContext("dNG.pas.database.{0}.applySchema".format(instance_class_name)):
 		#
 			schema_directory_path = path.join(Settings.get("path_data"),
 			                                  "database",
@@ -132,7 +133,7 @@ class.
 
 			if (os.access(schema_directory_path, os.R_OK | os.X_OK)):
 			#
-				re_object = re.compile("schema\\_\\d+\\.sql$", re.I)
+				re_object = re.compile("schema\\_\\d+\\.(json|sql)$", re.I)
 
 				schema_version_files = { file_name: path.join(schema_directory_path, file_name)
 				                         for file_name in os.listdir(schema_directory_path) if (re_object.match(file_name) is not None)
@@ -156,62 +157,32 @@ class.
 				schema.set_data_attributes(name = instance_class_name, version = target_version)
 				schema.save()
 			#
-			elif (len(schema_version_files) > 0):
-			#
-				if (current_version < target_version):
-				#
-					LogLine.info("pas.Database will upgrade schema '{0}' from version {1:d} to {2:d}".format(instance_class_name, current_version, target_version))
-					schema_versions = (version for version in range(current_version + 1, target_version + 1) if "schema_{0:d}.sql".format(version) in schema_version_files)
-
-					try:
-					#
-						with TransactionContext():
-						#
-							for schema_version in schema_versions:
-							#
-								Schema._apply_sql_file(connection, schema_version_files["schema_{0:d}.sql".format(schema_version)])
-								LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, schema_version))
-
-								schema = Schema()
-								schema.set_data_attributes(name = instance_class_name, version = schema_version)
-								schema.save()
-							#
-						#
-					#
-					except Exception:
-					#
-						cli = InteractiveCli.get_instance()
-						if (isinstance(cli, InteractiveCli)): cli.output_error("An error occurred updating the database schema '{0}'".format(instance_class_name))
-
-						raise
-					#
-				#
-			#
+			elif (len(schema_version_files) > 0
+			      and current_version < target_version
+			     ): Schema._upgrade(instance_class_name, schema_version_files, current_version, target_version)
 		#
 	#
 
 	@staticmethod
-	def _apply_sql_command(connection, sql_command):
+	def _apply_sql_command(sql_command):
 	#
 		"""
 Applies the given SQL command to the database connection.
 
-:param connection: Database connection
 :param sql_command: Database specific SQL command
 
 :since: v0.1.01
 		"""
 
-		connection.get_bind().execute(sql_command)
+		Connection.get_instance().get_bind().execute(sql_command)
 	#
 
 	@staticmethod
-	def _apply_sql_file(connection, file_path_name):
+	def _apply_sql_file(file_path_name):
 	#
 		"""
 Applies the given SQL file.
 
-:param connection: Database connection
 :param file_path_name: Database specific SQL file
 
 :since: v0.1.00
@@ -252,11 +223,47 @@ Applies the given SQL file.
 
 				if (current_sql_command != ""):
 				#
-					Schema._apply_sql_command(connection, current_sql_command)
+					Schema._apply_sql_command(current_sql_command)
 					current_sql_command = ""
 				#
 			#
 		#
+	#
+
+	@staticmethod
+	def _check_upgrade_dependencies(dependencies):
+	#
+		"""
+Checks that all dependencies are matched.
+
+:param dependencies: List of dependencies to be checked
+
+:return: (bool) True if all dependencies are matched
+:since:  v0.1.03
+		"""
+
+		_return = True
+
+		for dependency in dependencies:
+		#
+			if ("name" in dependency and "version_required" in dependency):
+			#
+				try:
+				#
+					schema_version = Schema.load_latest_name_entry(dependency['name'])
+					current_version = schema_version.get_version()
+				#
+				except NothingMatchedException: current_version = 0
+
+				if (current_version < dependency['version_required']):
+				#
+					_return = False
+					break
+				#
+			#
+		#
+
+		return _return
 	#
 
 	@classmethod
@@ -282,6 +289,84 @@ Load the schema entry with the highest version for the given name.
 			Instance._ensure_db_class(cls, db_instance)
 
 			return Schema(db_instance)
+		#
+	#
+
+	@staticmethod
+	def _upgrade(instance_class_name, schema_version_files, current_version, target_version):
+	#
+		"""
+Upgrades the given database schema.
+
+:param instance_class_name: SQLAlchemy database instance name the schema is
+       used for
+:param schema_version_files: List of database schema version files
+:param current_version: Current version of the SQLAlchemy database instance
+:param target_version: Target version of the SQLAlchemy database instance
+
+:since: v0.1.03
+		"""
+
+		LogLine.info("pas.Database will upgrade schema '{0}' from version {1:d} to {2:d}".format(instance_class_name, current_version, target_version))
+		schema_versions = (version for version in range(current_version + 1, target_version + 1) if "schema_{0:d}.sql".format(version) in schema_version_files)
+
+		try:
+		#
+			with TransactionContext():
+			#
+				for schema_version in schema_versions:
+				#
+					if ("schema_{0:d}.json".format(schema_version) in schema_version_files):
+					#
+						schema_data_file = File()
+						schema_data_path_file_name = schema_version_files["schema_{0:d}.json".format(schema_version)]
+
+						try:
+						#
+							if (not schema_data_file.open(schema_data_path_file_name, True, "r")):
+							#
+								raise IOException("An error occurred while reading database schema settings of '{0}' at version {1:d}".format(instance_class_name, schema_version))
+							#
+
+							schema_raw_data = schema_data_file.read()
+
+							schema_data = JsonResource().json_to_data(schema_raw_data)
+
+							if (schema_data is None):
+							#
+								LogLine.warning("{0} is not a valid JSON encoded file".format(schema_data_path_file_name))
+							#
+
+							if (type(schema_data.get("dependencies")) is list
+							    and (not Schema._check_upgrade_dependencies(schema_data['dependencies']))
+							   ):
+							#
+								LogLine.warning("pas.Database stopped upgrade of schema '{0}' at version {1:d} because of missing dependencies".format(instance_class_name, schema_version, target_version))
+
+								cli = InteractiveCli.get_instance()
+								if (isinstance(cli, InteractiveCli)): cli.output_info("Database schema '{0}' not completely upgraded because of missing dependencies. Execute again after dependencies are matched.".format(instance_class_name))
+
+								break
+							#
+						#
+						finally: schema_data_file.close()
+					#
+
+					Schema._apply_sql_file(schema_version_files["schema_{0:d}.sql".format(schema_version)])
+					LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, schema_version))
+
+					schema = Schema()
+					schema.set_data_attributes(name = instance_class_name, version = schema_version)
+					schema.save()
+				#
+			#
+		#
+		except Exception:
+		#
+			cli = InteractiveCli.get_instance()
+			if (isinstance(cli, InteractiveCli)): cli.output_error("An error occurred updating the database schema '{0}'".format(instance_class_name))
+
+			raise
 		#
 	#
 #
