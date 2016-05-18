@@ -334,7 +334,7 @@ Upgrades the given database schema.
 
 							if (schema_data is None):
 							#
-								LogLine.warning("{0} is not a valid JSON encoded file".format(schema_data_path_file_name))
+								raise IOException("'{0}' is not a valid JSON encoded file".format(schema_data_path_file_name))
 							#
 
 							if (type(schema_data.get("dependencies")) is list
