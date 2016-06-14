@@ -86,10 +86,6 @@ Thread safety lock
 The LogHandler is called whenever debug messages should be logged or errors
 happened.
 		"""
-		self.wrapped_transaction = False
-		"""
-True if a wrapping transaction has been created automatically.
-		"""
 
 		self.local.db_instance = db_instance
 	#
@@ -102,34 +98,8 @@ python.org: Enter the runtime context related to this object.
 :since: v0.1.00
 		"""
 
-		# pylint: disable=broad-except,maybe-no-member,protected-access
-
-		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
-
-		try:
-		#
-			with self._lock:
-			#
-				if (not hasattr(self.local, "context_depth")): self.local.context_depth = 0
-
-				if (self.local.context_depth < 1):
-				#
-					self.local.connection = Connection.get_instance()
-					self.local.connection._enter_context()
-				#
-
-				self.local.context_depth += 1
-				self._ensure_thread_local_instance()
-
-				if (self.local.db_instance is not None): self._ensure_attached_instance()
-				elif (self.is_reloadable()): self.reload()
-			#
-		#
-		except:
-		#
-			self._enter_context_cleanup()
-			raise
-		#
+		self._enter_context()
+		return self
 	#
 
 	def __exit__(self, exc_type, exc_value, traceback):
@@ -141,39 +111,7 @@ python.org: Exit the runtime context related to this object.
 :since:  v0.1.00
 		"""
 
-		# pylint: disable=broad-except,protected-access
-
-		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
-
-		if (self.local.context_depth > 0):
-		# Thread safety
-			with self._lock:
-			#
-				if (self.local.context_depth > 0):
-				#
-					self.local.context_depth -= 1
-
-					if (self.local.context_depth < 1 and self.wrapped_transaction):
-					#
-						try:
-						#
-							if (exc_type is None and exc_value is None): self.local.connection.commit()
-							else: self.local.connection.rollback()
-						#
-						except Exception as handled_exception:
-						#
-							if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_database")
-							if (exc_type is None and exc_value is None): self.local.connection.rollback()
-						#
-
-						self.wrapped_transaction = False
-					#
-
-					if (self.local.context_depth < 1): self.local.connection._exit_context(exc_type, exc_value, traceback)
-				#
-			#
-		#
-
+		self._exit_context(exc_type, exc_value, traceback)
 		return False
 	#
 
@@ -295,14 +233,8 @@ Checks for an active transaction or begins one.
 
 		if (self.local.connection.get_transaction_depth() < 1):
 		#
-			with self._lock:
-			# Thread safety
-				if (self.local.connection.get_transaction_depth() < 1):
-				#
-					self.local.connection.begin()
-					self.wrapped_transaction = True
-				#
-			#
+			self.local.connection.begin()
+			self.local.wrapped_transaction = True
 		#
 	#
 
@@ -314,14 +246,48 @@ Checks for an initialized SQLAlchemy database instance or create one.
 :since: v0.1.01
 		"""
 
-		if ((not hasattr(self.local, "db_instance")) or self.local.db_instance is None):
-		#
-			db_class = Instance.get_db_class(self.__class__)
+		if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
+	#
 
-			self.local.db_instance = (None
-			                          if (db_class is None or self.is_reloadable()) else
-			                          db_class()
-			                         )
+	def _enter_context(self):
+	#
+		"""
+Enters the connection context.
+
+:since: v0.1.03
+		"""
+
+		# pylint: disable=broad-except,maybe-no-member,protected-access
+
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
+
+		is_connection_context_entered = False
+
+		try:
+		#
+			if (not hasattr(self.local, "context_depth")): self.local.context_depth = 0
+
+			if (self.local.context_depth < 1):
+			#
+				self.local.connection = Connection.get_instance()
+				self.local.connection._enter_context()
+
+				is_connection_context_entered = True
+			#
+
+			self.local.context_depth += 1
+
+			self._ensure_thread_local_instance()
+
+			if (self.local.db_instance is not None): self._ensure_attached_instance()
+			elif (self.is_reloadable()): self.reload()
+		#
+		except Exception:
+		#
+			self._enter_context_cleanup()
+			if (is_connection_context_entered): self.local.connection._exit_context(None, None, None)
+
+			raise
 		#
 	#
 
@@ -334,14 +300,40 @@ cleanup database connections held by this instance.
 :since: v0.1.00
 		"""
 
-		# pylint: disable=protected-access
+		if (self.local.context_depth > 0): self.local.context_depth -= 1
+	#
 
-		if (getattr(self.local, "context_depth", 0) == 1):
+	def _exit_context(self, exc_type, exc_value, traceback):
+	#
+		"""
+Exits the connection context.
+
+:since: v0.1.02
+		"""
+
+		# pylint: disable=broad-except,protected-access
+
+		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
+
+		self.local.context_depth -= 1
+
+		if (self.local.context_depth < 1 and getattr(self.local, "wrapped_transaction", False)):
 		#
-			if (Connection._is_acquired()): Connection._release()
-			self.local.connection = None
+			try:
+			#
+				if (exc_type is None and exc_value is None): self.local.connection.commit()
+				else: self.local.connection.rollback()
+
+				self.local.wrapped_transaction = False
+			#
+			except Exception as handled_exception:
+			#
+				if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_database")
+				if (exc_type is None and exc_value is None): self.local.connection.rollback()
+			#
 		#
-		else: self.local.context_depth -= 1
+
+		if (self.local.context_depth < 1): self.local.connection._exit_context(exc_type, exc_value, traceback)
 	#
 
 	def _get_data_attribute(self, attribute):
