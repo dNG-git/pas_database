@@ -18,6 +18,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+from threading import local
+
 from dNG.pas.data.logging.log_line import LogLine
 from .connection import Connection
 
@@ -44,13 +46,9 @@ Constructor __init__(TransactionContext)
 :since: v0.1.00
 		"""
 
-		self.connection = None
+		self.local = local()
 		"""
-Database connection if bound
-		"""
-		self.context_depth = 0
-		"""
-Runtime context depth
+thread-local instance
 		"""
 	#
 
@@ -64,24 +62,26 @@ python.org: Enter the runtime context related to this object.
 
 		# pylint: disable=broad-except,protected-access
 
+		is_connection_context_entered = False
+
 		try:
 		#
-			if (self.context_depth < 1):
+			if (not hasattr(self.local, "context_depth")): self.local.context_depth = 0
+
+			if (self.local.context_depth < 1):
 			#
-				Connection._acquire()
-				self.connection = Connection.get_instance()
-				self.connection.begin()
+				self.local.connection = Connection.get_instance()
+				self.local.connection._enter_context()
+
+				is_connection_context_entered = True
 			#
 
-			self.context_depth += 1
+			self.local.connection.begin()
+			self.local.context_depth += 1
 		#
 		except Exception:
 		#
-			if (self.context_depth < 1):
-			#
-				self.connection = None
-				Connection._release()
-			#
+			if (is_connection_context_entered): self.local.connection._exit_context(None, None, None)
 
 			raise
 		#
@@ -98,28 +98,20 @@ python.org: Exit the runtime context related to this object.
 
 		# pylint: disable=broad-except,protected-access
 
-		if (self.context_depth > 0):
+		try:
 		#
-			try:
-			#
-				self.context_depth -= 1
-
-				if (exc_type is None and exc_value is None): self.connection.commit()
-				else: self.connection.rollback()
-			#
-			except Exception as handled_exception:
-			#
-				if (LogLine is not None): LogLine.error(handled_exception, context = "pas_database")
-				if (exc_type is None and exc_value is None): self.connection.rollback()
-			#
-			finally:
-			#
-				if (self.context_depth < 1):
-				#
-					self.connection = None
-					Connection._release()
-				#
-			#
+			if (exc_type is None and exc_value is None): self.local.connection.commit()
+			else: self.local.connection.rollback()
+		#
+		except Exception as handled_exception:
+		#
+			if (LogLine is not None): LogLine.error(handled_exception, context = "pas_database")
+			if (exc_type is None and exc_value is None): self.connection.rollback()
+		#
+		finally:
+		#
+			self.local.context_depth -= 1
+			if (self.local.context_depth < 1): self.local.connection._exit_context(exc_type, exc_value, traceback)
 		#
 
 		return False
