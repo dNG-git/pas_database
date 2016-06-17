@@ -247,6 +247,16 @@ Checks for an initialized SQLAlchemy database instance or create one.
 		"""
 
 		if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
+
+		if (self.local.db_instance is None):
+		#
+			if (self.is_reloadable()): self.reload()
+			else:
+			#
+				db_class = Instance.get_db_class(self.__class__)
+				if (db_class is not None): self.local.db_instance = db_class()
+			#
+		#
 	#
 
 	def _enter_context(self):
@@ -277,10 +287,9 @@ Enters the connection context.
 
 			self.local.context_depth += 1
 
-			self._ensure_thread_local_instance()
+			if (getattr(self.local, "db_instance", None) is None): self._ensure_thread_local_instance()
+			else: self._ensure_attached_instance()
 
-			if (self.local.db_instance is not None): self._ensure_attached_instance()
-			elif (self.is_reloadable()): self.reload()
 		#
 		except Exception:
 		#
@@ -541,7 +550,7 @@ Reload instance data from the database.
 
 		with self._lock:
 		#
-			if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
+			if (not hasattr(self.local, "db_instance")): self._ensure_thread_local_instance()
 			if (hasattr(self.local, "connection") and self.local.connection is not None): self._reload()
 		#
 	#
