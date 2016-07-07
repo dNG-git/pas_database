@@ -20,8 +20,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from sqlalchemy.inspection import inspect
 
-from dNG.pas.database.connection import Connection
-from dNG.pas.runtime.iterator import Iterator
+from dNG.database.connection import Connection
+from dNG.runtime.iterator import Iterator
 
 class InstanceIterator(Iterator):
 #
@@ -29,11 +29,11 @@ class InstanceIterator(Iterator):
 "InstanceIterator" provides an instance wrapping iterator to encapsulate
 SQLAlchemy database instances with an given class.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -48,7 +48,7 @@ Constructor __init__(InstanceIterator)
 :param buffered: True to buffer the result
 :param instance_class: Encapsulating database instance class
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.args = args
@@ -86,7 +86,7 @@ Results being interated
 python.org: Return an iterator object.
 
 :return: (object) Iterator object
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return (iter(self.result) if (self.instance_class is None) else self)
@@ -98,7 +98,7 @@ python.org: Return an iterator object.
 python.org: Return the next item from the container.
 
 :return: (object) Result object
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		db_instance = None
@@ -127,7 +127,7 @@ Loads and initializes instances for the buffer.
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		_return = db_instance
@@ -162,7 +162,7 @@ Loads and initializes instances for the buffer.
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.result = [ ]

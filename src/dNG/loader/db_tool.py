@@ -20,25 +20,25 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from argparse import ArgumentParser
 
-from dNG.pas.data.settings import Settings
-from dNG.pas.database.connection import Connection
-from dNG.pas.database.instances.abstract import Abstract
-from dNG.pas.database.transaction_context import TransactionContext
-from dNG.pas.loader.interactive_cli import InteractiveCli
-from dNG.pas.module.named_loader import NamedLoader
-from dNG.pas.plugins.hook import Hook
-from dNG.pas.plugins.hook_context import HookContext
+from dNG.data.settings import Settings
+from dNG.database.connection import Connection
+from dNG.database.instances.abstract import Abstract
+from dNG.database.transaction_context import TransactionContext
+from dNG.loader.interactive_cli import InteractiveCli
+from dNG.module.named_loader import NamedLoader
+from dNG.plugins.hook import Hook
+from dNG.plugins.hook_context import HookContext
 
 class DbTool(InteractiveCli):
 #
 	"""
 Tool to work with the configured database and its tables.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -52,7 +52,7 @@ Constructor __init__(DbTool)
 
 :param args: Parsed command line arguments
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		InteractiveCli.__init__(self)
@@ -74,6 +74,9 @@ True if this tool should handle the initial configuration.
 	#
 		"""
 Returns true if this tool should handle the initial configuration.
+
+:return: (bool) True if CLI should handle the initial configuration.
+:since:  v0.2.00
 		"""
 
 		return self.cli_setup
@@ -84,13 +87,13 @@ Returns true if this tool should handle the initial configuration.
 		"""
 Callback for execution.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
 		Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
-		self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
+		self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
 		if (self.log_handler is not None):
 		#
@@ -113,7 +116,7 @@ Callback for execution.
 		"""
 Callback for shutdown.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Hook.call("dNG.pas.Status.onShutdown")
@@ -126,7 +129,7 @@ Callback for shutdown.
 		"""
 Callback for execution.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.output_info("Loading database entities ...")
@@ -155,7 +158,7 @@ Stops running instances.
 :param last_return: The return value from the last hook called.
 
 :return: (None) None to stop communication after this call
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return last_return

@@ -18,19 +18,19 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from dNG.pas.runtime.type_exception import TypeException
-from dNG.pas.runtime.value_exception import ValueException
+from dNG.runtime.type_exception import TypeException
+from dNG.runtime.value_exception import ValueException
 
 class SortDefinition(object):
 #
 	"""
 "SortDefinition" is an abstracted .
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -49,7 +49,7 @@ Descending sort direction
 		"""
 Constructor __init__(SortDefinition)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.sort_tuples = [ ]
@@ -77,7 +77,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 :param query: SQLAlchemy query instance
 
 :return: (object) Modified SQLAlchemy query instance
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		_return = query
@@ -109,7 +109,7 @@ Appends a sort definition to the current list.
 :param direction: Sort direction
 
 :return: (object) SortDefinition instance
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		SortDefinition.validate_sort_direction(direction)
@@ -123,7 +123,7 @@ Appends a sort definition to the current list.
 		"""
 Clears the current list.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.sort_tuples = [ ]
@@ -138,7 +138,7 @@ Prepends a sort definition to the current list.
 :param direction: Sort direction
 
 :return: (object) SortDefinition instance
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		SortDefinition.validate_sort_direction(direction)
@@ -152,6 +152,8 @@ Prepends a sort definition to the current list.
 	#
 		"""
 Validates the given sort direction.
+
+:since: v0.2.00
 		"""
 
 		if (direction not in ( SortDefinition.ASCENDING, SortDefinition.DESCENDING )): raise ValueException("Sort definition given is not supported")

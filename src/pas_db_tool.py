@@ -19,10 +19,10 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from dNG.pas.loader.db_tool import DbTool
+from dNG.loader.db_tool import DbTool
 import sys
 
-db_create = None
+db_tool = None
 
 try:
 #

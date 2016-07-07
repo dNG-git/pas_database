@@ -29,11 +29,11 @@ class DateTime(TypeDecorator):
 This class provides an SQLAlchemy DateTime type represented as UNIX
 timestamp in Python.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -61,6 +61,7 @@ sqlalchemy.org: Receive a bound parameter value to be converted.
 :return: (mixed) Subclasses override this method to return the value that
          should be passed along to the underlying TypeEngine object, and
          from there to the DBAPI execute() method.
+:since:  v0.2.00
 		"""
 
 		return (None if (value is None) else datetime.fromtimestamp(value))
@@ -79,6 +80,7 @@ sqlalchemy.org: Receive a result-row column value to be converted.
          should be passed back to the application, given a value that is
          already processed by the underlying TypeEngine object, originally
          from the DBAPI cursor method fetchone() or similar.
+:since:  v0.2.00
 		"""
 
 		_return = None

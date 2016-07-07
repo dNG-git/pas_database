@@ -22,12 +22,13 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.engine.result import ResultProxy
 from threading import local
 
-from dNG.pas.module.named_loader import NamedLoader
-from dNG.pas.runtime.io_exception import IOException
-from dNG.pas.runtime.not_implemented_exception import NotImplementedException
-from dNG.pas.runtime.thread_lock import ThreadLock
-from dNG.pas.runtime.type_exception import TypeException
-from dNG.pas.runtime.value_exception import ValueException
+from dNG.module.named_loader import NamedLoader
+from dNG.runtime.io_exception import IOException
+from dNG.runtime.not_implemented_exception import NotImplementedException
+from dNG.runtime.thread_lock import ThreadLock
+from dNG.runtime.type_exception import TypeException
+from dNG.runtime.value_exception import ValueException
+
 from .connection import Connection
 from .instance_iterator import InstanceIterator
 from .sort_definition import SortDefinition
@@ -39,11 +40,11 @@ class Instance(object):
 "Instance" is an abstract object encapsulating an SQLAlchemy database
 instance.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -62,7 +63,7 @@ Constructor __init__(Instance)
 
 :param db_instance: Encapsulated SQLAlchemy database instance
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self._db_context_sort_definition = { }
@@ -81,7 +82,7 @@ thread-local instance
 		"""
 Thread safety lock
 		"""
-		self.log_handler = NamedLoader.get_singleton("dNG.pas.data.logging.LogHandler", False)
+		self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 		"""
 The LogHandler is called whenever debug messages should be logged or errors
 happened.
@@ -95,7 +96,7 @@ happened.
 		"""
 python.org: Enter the runtime context related to this object.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self._enter_context()
@@ -108,7 +109,7 @@ python.org: Enter the runtime context related to this object.
 python.org: Exit the runtime context related to this object.
 
 :return: (bool) True to suppress exceptions
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		self._exit_context(exc_type, exc_value, traceback)
@@ -123,7 +124,7 @@ python.org: Called to create a new instance of class cls.
 :param cls: Python class
 
 :return: (object) Instance object
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		db_instance = kwargs.get("db_instance")
@@ -153,7 +154,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 :param context: Sort definition context
 
 :return: (object) Modified SQLAlchemy query instance
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -175,7 +176,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 Deletes this entry from the database.
 
 :return: (bool) True on success
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -201,7 +202,7 @@ Deletes this entry from the database.
 		"""
 Checks the SQLAlchemy database instance to be attached to an session.
 
-:since: v0.1.01
+:since: v0.2.00
 		"""
 
 		with self._lock:
@@ -226,7 +227,7 @@ Checks the SQLAlchemy database instance to be attached to an session.
 		"""
 Checks for an active transaction or begins one.
 
-:since: v0.1.01
+:since: v0.2.00
 		"""
 
 		# pylint: disable=broad-except,maybe-no-member,protected-access
@@ -243,7 +244,7 @@ Checks for an active transaction or begins one.
 		"""
 Checks for an initialized SQLAlchemy database instance or create one.
 
-:since: v0.1.01
+:since: v0.2.00
 		"""
 
 		if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
@@ -264,7 +265,7 @@ Checks for an initialized SQLAlchemy database instance or create one.
 		"""
 Enters the connection context.
 
-:since: v0.1.03
+:since: v0.2.00
 		"""
 
 		# pylint: disable=broad-except,maybe-no-member,protected-access
@@ -306,7 +307,7 @@ Enters the connection context.
 This method should be called for if exceptions in "__enter__" occur to
 cleanup database connections held by this instance.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.local.context_depth > 0): self.local.context_depth -= 1
@@ -317,7 +318,7 @@ cleanup database connections held by this instance.
 		"""
 Exits the connection context.
 
-:since: v0.1.02
+:since: v0.2.00
 		"""
 
 		# pylint: disable=broad-except,protected-access
@@ -353,7 +354,7 @@ Returns the data for the requested attribute.
 :param attribute: Requested attribute
 
 :return: (mixed) Value for the requested attribute; None if undefined
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return (getattr(self.local.db_instance, attribute)
@@ -368,7 +369,7 @@ Returns the data for the requested attribute.
 Returns the requested attributes.
 
 :return: (dict) Values for the requested attributes; None for undefined ones
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -388,7 +389,7 @@ Returns the requested attributes.
 Returns the actual database entry instance.
 
 :return: (object) Database entry instance
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		with self: return self.local.db_instance
@@ -402,7 +403,7 @@ Returns the sort definition based in the given context.
 :param context: Sort definition context
 
 :return: (object) SortDefinition instance if specified; None otherwise
-:since:  v0.1.03
+:since:  v0.2.00
 		"""
 
 		_return = None
@@ -423,7 +424,7 @@ Returns the default sort definition list.
 :param context: Sort definition context
 
 :return: (object) Sort definition
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -438,7 +439,7 @@ Returns the data for the requested attribute not defined for this instance.
 :param attribute: Requested attribute
 
 :return: (dict) Value for the requested attribute; None if undefined
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return None
@@ -449,7 +450,7 @@ Returns the data for the requested attribute not defined for this instance.
 		"""
 Insert the instance into the database.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		# pylint: disable=maybe-no-member
@@ -465,7 +466,7 @@ Checks the given attribute if it is defined for the entity.
 :param attribute: Requested attribute
 
 :return: (bool) Returns true if the attribute is defined
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		_return = False
@@ -491,7 +492,7 @@ Checks the given attribute if it is defined for the entity.
 Returns true if at least one of the attributes is "None".
 
 :return: (bool) True if at least one of the attributes is "None"
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		with self:
@@ -517,7 +518,7 @@ Returns true if at least one of the attributes is "None".
 Returns true if the instance is already saved in the database.
 
 :return: (bool) True if known
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		# pylint: disable=maybe-no-member
@@ -532,7 +533,7 @@ Returns true if the instance can be reloaded automatically in another
 thread.
 
 :return: (bool) True if reloadable
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return False
@@ -543,7 +544,7 @@ thread.
 		"""
 Reload instance data from the database.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -560,7 +561,7 @@ Reload instance data from the database.
 		"""
 Implementation of the reloading SQLAlchemy database instance logic.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.local.db_instance is None): raise IOException("Database instance is not reloadable.")
@@ -572,7 +573,7 @@ Implementation of the reloading SQLAlchemy database instance logic.
 		"""
 Saves changes of the instance into the database.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -591,7 +592,7 @@ Saves changes of the instance into the database.
 		"""
 Sets values given as keyword arguments to this method.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		raise NotImplementedException()
@@ -604,7 +605,7 @@ Sets the sort definition list.
 
 :param sort_definition: Sort definition list
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -620,7 +621,7 @@ Sets the sort definition list.
 		"""
 Updates the instance already saved to the database.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		pass
@@ -638,7 +639,7 @@ database instances with an given class.
 :param cursor: SQLAlchemy result cursor
 
 :return: (Iterator) InstanceIterator object
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
@@ -655,7 +656,7 @@ auto-loading it.
 :param cls: Expected encapsulating database instance class
 :param db_instance: Encapsulated database instance
 
-:since: v0.1.02
+:since: v0.2.00
 		"""
 
 		if (db_instance is not None
@@ -673,7 +674,7 @@ Returns the database class for the encapsulating database class given.
 :param cls: Encapsulating database class
 
 :return: (object) Database class; None if not defined
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		return getattr(cls, "_DB_INSTANCE_CLASS", None)
@@ -687,7 +688,7 @@ Returns the query instance for the encapsulating database class given.
 
 :param cls: Encapsulating database class
 
-:since: v0.1.02
+:since: v0.2.00
 		"""
 
 		db_class = Instance.get_db_class(cls)
@@ -711,7 +712,7 @@ database instances with an given class.
 :param cursor: SQLAlchemy result cursor
 
 :return: (Iterator) InstanceIterator object
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
@@ -728,7 +729,7 @@ alternatively the given default one.
 :param key: Key to create the "get*" method for
 
 :return: (object) Proxy method
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		def proxymethod(self):
@@ -737,7 +738,7 @@ alternatively the given default one.
 Returns the value of the corresponding attribute.
 
 :return: (mixed) Attribute value
-:since:  v0.1.00
+:since:  v0.2.00
 			"""
 
 			return self.get_data_attributes(key)[key]
@@ -755,7 +756,7 @@ Wraps a "set*" method to set the given database entry value.
 :param key: Key to create the "set*" method for
 
 :return: (object) Proxy method
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		def proxymethod(self, value):
@@ -765,7 +766,7 @@ Sets the value of the corresponding attribute.
 
 :param value: Attribute value
 
-:since: v0.1.00
+:since: v0.2.00
 			"""
 
 			# pylint: disable=star-args

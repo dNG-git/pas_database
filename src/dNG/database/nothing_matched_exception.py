@@ -18,7 +18,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from dNG.pas.runtime.value_exception import ValueException
+from dNG.runtime.value_exception import ValueException
 
 class NothingMatchedException(ValueException):
 #
@@ -26,11 +26,11 @@ class NothingMatchedException(ValueException):
 "NothingMatchedException" is raised when no entry matched the given
 query condition.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.01
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -43,7 +43,7 @@ Constructor __init__(NothingMatchedException)
 :param value: Exception message value
 :param _exception: Inner exception
 
-:since: v0.1.01
+:since: v0.2.00
 		"""
 
 		ValueException.__init__(self, value, _exception)

@@ -25,11 +25,11 @@ class LockableMixin(object):
 	"""
 "LockableMixin" provides methods to handle lockable instances.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -39,7 +39,7 @@ class LockableMixin(object):
 Returns true if the entry is locked.
 
 :return: (bool) True if locked
-:since:  v0.1.00
+:since:  v0.2.00
 	"""
 #
 

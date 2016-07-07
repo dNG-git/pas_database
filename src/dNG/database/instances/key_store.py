@@ -18,36 +18,35 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from time import time
+from sqlalchemy.schema import Column
+from sqlalchemy.types import TEXT, VARCHAR
 from uuid import uuid4 as uuid
 
-from sqlalchemy.schema import Column
-from sqlalchemy.types import BIGINT, VARCHAR
+from dNG.database.types.date_time import DateTime
 
-from dNG.pas.database.types.date_time import DateTime
 from .abstract import Abstract
 
-class SchemaVersion(Abstract):
+class KeyStore(Abstract):
 #
 	"""
-Database table listing the current schema version.
+Database based key-value store.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
 
 	# pylint: disable=invalid-name
 
-	__tablename__ = "{0}_schema_version".format(Abstract.get_table_prefix())
+	__tablename__ = "{0}_key_store".format(Abstract.get_table_prefix())
 	"""
 SQLAlchemy table name
 	"""
-	db_instance_class = "dNG.pas.database.Schema"
+	db_instance_class = "dNG.data.text.KeyStore"
 	"""
 Encapsulating SQLAlchemy database instance class name
 	"""
@@ -58,32 +57,35 @@ Database schema version
 
 	id = Column(VARCHAR(32), primary_key = True)
 	"""
-schema_version.id
+keystore.id
 	"""
-	name = Column(VARCHAR(255), index = True, nullable = False)
+	key = Column(VARCHAR(32), nullable = False, unique = True)
 	"""
-schema_version.name
+keystore.key
 	"""
-	version = Column(BIGINT, nullable = False)
+	validity_start_time = Column(DateTime, default = 0, nullable = False)
 	"""
-schema_version.version
+keystore.validity_start_time
 	"""
-	applied = Column(DateTime, default = 0, nullable = False)
+	validity_end_time = Column(DateTime, default = 0, nullable = False)
 	"""
-schema_version.applied
+keystore.validity_end_time
+	"""
+	value = Column(TEXT)
+	"""
+keystore.value
 	"""
 
 	def __init__(self, *args, **kwargs):
 	#
 		"""
-Constructor __init__(SchemaVersion)
+Constructor __init__(KeyStore)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Abstract.__init__(self, *args, **kwargs)
 		if (self.id is None): self.id = uuid().hex
-		if (self.applied is None): self.applied = int(time())
 	#
 #
 

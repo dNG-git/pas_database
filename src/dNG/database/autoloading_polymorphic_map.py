@@ -20,10 +20,23 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from sqlalchemy.orm.mapper import configure_mappers
 
-from dNG.pas.module.named_loader import NamedLoader
+from dNG.module.named_loader import NamedLoader
 
 class AutoloadingPolymorphicMap(dict):
 #
+	"""
+"AutoloadingPolymorphicMap" is used to re-trigger the "configure_mappers()"
+after loading SQLAlchemy instances by "dNG.module.NamedLoader".
+
+:author:     direct Netware Group et al.
+:copyright:  (C) direct Netware Group - All rights reserved
+:package:    pas
+:subpackage: database
+:since:      v0.2.00
+:license:    https://www.direct-netware.de/redirect?licenses;mpl2
+             Mozilla Public License, v. 2.0
+	"""
+
 	def __missing__(self, key):
 	#
 		"""
@@ -34,10 +47,10 @@ argument.
 :param key: Polymorphic name we want to load
 
 :return: (object) Polymorphic instance if found
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
-		common_name = "dNG.pas.database.instances.{0}".format(key)
+		common_name = "dNG.database.instances.{0}".format(key)
 
 		if ((not NamedLoader.is_defined(common_name, False))
 		    and NamedLoader.is_defined(common_name)

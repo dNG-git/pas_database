@@ -20,7 +20,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from threading import local
 
-from dNG.pas.data.logging.log_line import LogLine
+from dNG.data.logging.log_line import LogLine
+
 from .connection import Connection
 
 class TransactionContext(object):
@@ -29,11 +30,11 @@ class TransactionContext(object):
 "TransactionContext" provides an SQLAlchemy based ContextManager for
 transactions.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -43,7 +44,7 @@ transactions.
 		"""
 Constructor __init__(TransactionContext)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.local = local()
@@ -57,7 +58,7 @@ thread-local instance
 		"""
 python.org: Enter the runtime context related to this object.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		# pylint: disable=broad-except,protected-access
@@ -93,7 +94,7 @@ python.org: Enter the runtime context related to this object.
 python.org: Exit the runtime context related to this object.
 
 :return: (bool) True to suppress exceptions
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		# pylint: disable=broad-except,protected-access
@@ -126,7 +127,7 @@ Wraps a callable to be executed within an transaction context.
 :param callable: Wrapped code
 
 :return: (object) Proxy method
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		def proxymethod(*args, **kwargs):

@@ -22,32 +22,33 @@ from os import path
 import os
 import re
 
+from dNG.data.binary import Binary
 from dNG.data.file import File
-from dNG.pas.data.binary import Binary
-from dNG.pas.data.settings import Settings
-from dNG.pas.data.logging.log_line import LogLine
-from dNG.pas.database.connection import Connection
-from dNG.pas.database.instances.abstract import Abstract as _DbAbstract
-from dNG.pas.database.instances.schema_version import SchemaVersion as _DbSchemaVersion
-from dNG.pas.loader.interactive_cli import InteractiveCli
-from dNG.pas.plugins.hook_context import HookContext
-from dNG.pas.runtime.io_exception import IOException
-from dNG.pas.runtime.type_exception import TypeException
+from dNG.data.logging.log_line import LogLine
+from dNG.data.json_resource import JsonResource
+from dNG.data.settings import Settings
+from dNG.database.connection import Connection
+from dNG.database.instances.abstract import Abstract as _DbAbstract
+from dNG.database.instances.schema_version import SchemaVersion as _DbSchemaVersion
+from dNG.loader.interactive_cli import InteractiveCli
+from dNG.plugins.hook_context import HookContext
+from dNG.runtime.io_exception import IOException
+from dNG.runtime.type_exception import TypeException
+
 from .instance import Instance
 from .nothing_matched_exception import NothingMatchedException
 from .transaction_context import TransactionContext
-from dNG.data.json_resource import JsonResource
 
 class Schema(Instance):
 #
 	"""
 The "Schema" class provides methods to handle versions and upgrades.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -70,7 +71,7 @@ Comments in (invalid) JSON setting files are replaced before getting parsed.
 		"""
 Constructor __init__(Schema)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Instance.__init__(self, db_instance)
@@ -81,7 +82,7 @@ Constructor __init__(Schema)
 Returns the version for this schema entry.
 
 :return: (int) Version
-:since:  v0.1.00
+:since:  v0.2.00
 	"""
 
 	def set_data_attributes(self, **kwargs):
@@ -89,7 +90,7 @@ Returns the version for this schema entry.
 		"""
 Sets values given as keyword arguments to this method.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		with self:
@@ -109,7 +110,7 @@ class.
 
 :param instance_class: Database instance class
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		# pylint: disable=broad-except
@@ -171,7 +172,7 @@ Applies the given SQL command to the database connection.
 
 :param sql_command: Database specific SQL command
 
-:since: v0.1.01
+:since: v0.2.00
 		"""
 
 		Connection.get_instance().get_bind().execute(sql_command)
@@ -185,7 +186,7 @@ Applies the given SQL file.
 
 :param file_path_name: Database specific SQL file
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		file_content = None
@@ -239,7 +240,7 @@ Checks that all dependencies are matched.
 :param dependencies: List of dependencies to be checked
 
 :return: (bool) True if all dependencies are matched
-:since:  v0.1.03
+:since:  v0.2.00
 		"""
 
 		_return = True
@@ -276,7 +277,7 @@ Load the schema entry with the highest version for the given name.
 :param name: Schema name
 
 :return: (object) Schema instance on success
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		with Connection.get_instance():
@@ -304,7 +305,7 @@ Upgrades the given database schema.
 :param current_version: Current version of the SQLAlchemy database instance
 :param target_version: Target version of the SQLAlchemy database instance
 
-:since: v0.1.03
+:since: v0.2.00
 		"""
 
 		LogLine.info("pas.Database will upgrade schema '{0}' from version {1:d} to {2:d}".format(instance_class_name, current_version, target_version))

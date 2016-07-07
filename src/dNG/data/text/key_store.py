@@ -22,27 +22,27 @@ from random import randrange
 from sqlalchemy.sql.expression import and_
 from time import time
 
+from dNG.data.binary import Binary
 from dNG.data.json_resource import JsonResource
-from dNG.pas.data.binary import Binary
-from dNG.pas.data.settings import Settings
-from dNG.pas.database.connection import Connection
-from dNG.pas.database.instance import Instance
-from dNG.pas.database.nothing_matched_exception import NothingMatchedException
-from dNG.pas.database.instances.key_store import KeyStore as _DbKeyStore
-from dNG.pas.runtime.io_exception import IOException
-from dNG.pas.runtime.type_exception import TypeException
-from dNG.pas.runtime.value_exception import ValueException
+from dNG.data.settings import Settings
+from dNG.database.connection import Connection
+from dNG.database.instance import Instance
+from dNG.database.instances.key_store import KeyStore as _DbKeyStore
+from dNG.database.nothing_matched_exception import NothingMatchedException
+from dNG.runtime.io_exception import IOException
+from dNG.runtime.type_exception import TypeException
+from dNG.runtime.value_exception import ValueException
 
 class KeyStore(Instance):
 #
 	"""
 Database based encoded key-value store.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -59,7 +59,7 @@ SQLAlchemy database instance class to initialize for new instances.
 		"""
 Constructor __init__(KeyStore)
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		Instance.__init__(self, db_instance)
@@ -75,7 +75,7 @@ Database ID used for reloading
 Returns the ID of this instance.
 
 :return: (str) KeyStore entry ID; None if undefined
-:since:  v0.1.00
+:since:  v0.2.00
 	"""
 
 	get_key = Instance._wrap_getter("key")
@@ -83,7 +83,7 @@ Returns the ID of this instance.
 Returns the key of this instance.
 
 :return: (str) KeyStore entry key; None if undefined
-:since:  v0.1.00
+:since:  v0.2.00
 	"""
 
 	def get_value_dict(self):
@@ -92,7 +92,7 @@ Returns the key of this instance.
 Returns the values originally given as a dict to this KeyStore instance.
 
 :return: (dict) Values from the KeyStore
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
@@ -107,7 +107,7 @@ Returns true if the instance can be reloaded automatically in another
 thread.
 
 :return: (bool) True if reloadable
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return (self.db_id is not None)
@@ -118,7 +118,7 @@ thread.
 		"""
 Returns true if the KeyStore entry is active and valid.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		with self:
@@ -137,7 +137,7 @@ Returns true if the KeyStore entry is active and valid.
 		"""
 Implementation of the reloading SQLAlchemy database instance logic.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (self.local.db_instance is None):
@@ -153,7 +153,7 @@ Implementation of the reloading SQLAlchemy database instance logic.
 		"""
 Sets values given as keyword arguments to this method.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		with self:
@@ -172,7 +172,7 @@ Sets the values given as a dict as the value of this KeyStore instance.
 
 :param data: Dict to be set as value
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
@@ -189,7 +189,7 @@ Load KeyStore entry from database.
 :param db_instance: SQLAlchemy database instance
 
 :return: (object) KeyStore instance on success
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		_return = None
@@ -230,7 +230,7 @@ Load KeyStore value by ID.
 :param _id: KeyStore ID
 
 :return: (object) KeyStore instance on success
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (_id is None): raise NothingMatchedException("KeyStore ID is invalid")
@@ -251,7 +251,7 @@ Load KeyStore value by key.
 :param key: KeyStore key
 
 :return: (object) KeyStore instance on success
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		if (key is None): raise NothingMatchedException("KeyStore key is invalid")

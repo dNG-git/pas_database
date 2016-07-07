@@ -21,19 +21,19 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import reconstructor
 
-from dNG.pas.database.connection import Connection
-from dNG.pas.runtime.value_exception import ValueException
+from dNG.database.connection import Connection
+from dNG.runtime.value_exception import ValueException
 
 class Abstract(declarative_base()):
 #
 	"""
 This class provides abstract SQLAlchemy database instances.
 
-:author:     direct Netware Group
+:author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.1.00
+:since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
 	"""
@@ -62,7 +62,7 @@ sqlalchemy.org: Designates a method as the "reconstructor", an __init__-like
 method that will be called by the ORM after the instance has been loaded
 from the database or otherwise reconstituted.
 
-:since: v0.1.00
+:since: v0.2.00
 		"""
 
 		self.__init__()
@@ -78,7 +78,7 @@ Returns the SQLAlchemy column for the requested attribute.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		return cls._get_db_column(cls, attribute)
@@ -95,7 +95,7 @@ class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		return (getattr(cls, attribute)
@@ -115,7 +115,7 @@ this entity class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		return cls._get_unknown_db_column(cls, attribute)
@@ -132,7 +132,7 @@ the given entity class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.1.02
+:since:  v0.2.00
 		"""
 
 		raise ValueException("Given attribute '{0}' is not defined for '{1}".format(attribute, cls.__name__))
@@ -145,7 +145,7 @@ the given entity class.
 Get the configured database table prefix.
 
 :return: (str) Table prefix
-:since:  v0.1.00
+:since:  v0.2.00
 		"""
 
 		return Connection.get_table_prefix()
