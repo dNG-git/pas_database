@@ -251,9 +251,9 @@ the last context is exited.
 
 		if (self.local.sa_session is not None):
 		#
-			sa_connection = self.local.sa_session.connection()
+			sa_connection = (self.local.sa_session.connection() if (self.local.sa_session.is_active) else None)
 
-			if ((not self.local.sa_session.is_active)
+			if (sa_connection is None
 			    or sa_connection.closed
 			    or sa_connection.invalidated
 			   ):
