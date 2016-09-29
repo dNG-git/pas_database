@@ -107,7 +107,7 @@ python.org: Exit the runtime context related to this object.
 		except Exception as handled_exception:
 		#
 			if (LogLine is not None): LogLine.error(handled_exception, context = "pas_database")
-			if (exc_type is None and exc_value is None): self.connection.rollback()
+			if (exc_type is None and exc_value is None): self.local.connection.rollback()
 		#
 		finally:
 		#
