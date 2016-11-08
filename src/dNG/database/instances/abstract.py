@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -25,8 +24,7 @@ from dNG.database.connection import Connection
 from dNG.runtime.value_exception import ValueException
 
 class Abstract(declarative_base()):
-#
-	"""
+    """
 This class provides abstract SQLAlchemy database instances.
 
 :author:     direct Netware Group et al.
@@ -36,42 +34,40 @@ This class provides abstract SQLAlchemy database instances.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	# pylint: disable=unused-argument
+    # pylint: disable=unused-argument
 
-	__abstract__ = True
-	"""
+    __abstract__ = True
+    """
 sqlalchemy.org: "__abstract__" causes declarative to skip the production
 of a table or mapper for the class entirely.
-	"""
-	db_instance_class = None
-	"""
+    """
+    db_instance_class = None
+    """
 Encapsulating SQLAlchemy database instance class name
-	"""
-	db_schema_version = None
-	"""
+    """
+    db_schema_version = None
+    """
 Database schema version
-	"""
+    """
 
-	@reconstructor
-	def sa_reconstructor(self):
-	#
-		"""
+    @reconstructor
+    def sa_reconstructor(self):
+        """
 sqlalchemy.org: Designates a method as the "reconstructor", an __init__-like
 method that will be called by the ORM after the instance has been loaded
 from the database or otherwise reconstituted.
 
 :since: v0.2.00
-		"""
+        """
 
-		self.__init__()
-	#
+        self.__init__()
+    #
 
-	@classmethod
-	def get_db_column(cls, attribute):
-	#
-		"""
+    @classmethod
+    def get_db_column(cls, attribute):
+        """
 Returns the SQLAlchemy column for the requested attribute.
 
 :param cls: Python class
@@ -79,15 +75,14 @@ Returns the SQLAlchemy column for the requested attribute.
 
 :return: (object) SQLAlchemy column
 :since:  v0.2.00
-		"""
+        """
 
-		return cls._get_db_column(cls, attribute)
-	#
+        return cls._get_db_column(cls, attribute)
+    #
 
-	@staticmethod
-	def _get_db_column(cls, attribute):
-	#
-		"""
+    @staticmethod
+    def _get_db_column(cls, attribute):
+        """
 Returns the SQLAlchemy column for the requested attribute of the given
 class.
 
@@ -96,18 +91,17 @@ class.
 
 :return: (object) SQLAlchemy column
 :since:  v0.2.00
-		"""
+        """
 
-		return (getattr(cls, attribute)
-		        if (hasattr(cls, attribute)) else
-		        cls.get_unknown_db_column(attribute)
-		       )
-	#
+        return (getattr(cls, attribute)
+                if (hasattr(cls, attribute)) else
+                cls.get_unknown_db_column(attribute)
+               )
+    #
 
-	@classmethod
-	def get_unknown_db_column(cls, attribute):
-	#
-		"""
+    @classmethod
+    def get_unknown_db_column(cls, attribute):
+        """
 Returns the SQLAlchemy column for the requested attribute not defined for
 this entity class.
 
@@ -116,15 +110,14 @@ this entity class.
 
 :return: (object) SQLAlchemy column
 :since:  v0.2.00
-		"""
+        """
 
-		return cls._get_unknown_db_column(cls, attribute)
-	#
+        return cls._get_unknown_db_column(cls, attribute)
+    #
 
-	@staticmethod
-	def _get_unknown_db_column(cls, attribute):
-	#
-		"""
+    @staticmethod
+    def _get_unknown_db_column(cls, attribute):
+        """
 Returns the SQLAlchemy column for the requested attribute not defined for
 the given entity class.
 
@@ -133,23 +126,20 @@ the given entity class.
 
 :return: (object) SQLAlchemy column
 :since:  v0.2.00
-		"""
+        """
 
-		raise ValueException("Given attribute '{0}' is not defined for '{1}".format(attribute, cls.__name__))
-	#
+        raise ValueException("Given attribute '{0}' is not defined for '{1}".format(attribute, cls.__name__))
+    #
 
-	@staticmethod
-	def get_table_prefix():
-	#
-		"""
+    @staticmethod
+    def get_table_prefix():
+        """
 Get the configured database table prefix.
 
 :return: (str) Table prefix
 :since:  v0.2.00
-		"""
+        """
 
-		return Connection.get_table_prefix()
-	#
+        return Connection.get_table_prefix()
+    #
 #
-
-##j## EOF

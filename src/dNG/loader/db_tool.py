@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -30,8 +29,7 @@ from dNG.plugins.hook import Hook
 from dNG.plugins.hook_context import HookContext
 
 class DbTool(InteractiveCli):
-#
-	"""
+    """
 Tool to work with the configured database and its tables.
 
 :author:     direct Netware Group et al.
@@ -41,117 +39,108 @@ Tool to work with the configured database and its tables.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	# pylint: disable=unused-argument
+    # pylint: disable=unused-argument
 
-	def __init__(self):
-	#
-		"""
+    def __init__(self):
+        """
 Constructor __init__(DbTool)
 
 :param args: Parsed command line arguments
 
 :since: v0.2.00
-		"""
+        """
 
-		InteractiveCli.__init__(self)
+        InteractiveCli.__init__(self)
 
-		self.cli_setup = False
-		"""
+        self.cli_setup = False
+        """
 True if this tool should handle the initial configuration.
-		"""
+        """
 
-		self.arg_parser = ArgumentParser()
-		self.arg_parser.add_argument("--applySchema", action = "store_true", dest = "apply_schema")
-		self.arg_parser.add_argument("-s", action = "store_true", dest = "cli_setup")
+        self.arg_parser = ArgumentParser()
+        self.arg_parser.add_argument("--applySchema", action = "store_true", dest = "apply_schema")
+        self.arg_parser.add_argument("-s", action = "store_true", dest = "cli_setup")
 
-		InteractiveCli.register_run_callback(self._on_run)
-		InteractiveCli.register_shutdown_callback(self._on_shutdown)
-	#
+        InteractiveCli.register_run_callback(self._on_run)
+        InteractiveCli.register_shutdown_callback(self._on_shutdown)
+    #
 
-	def is_cli_setup(self):
-	#
-		"""
+    def is_cli_setup(self):
+        """
 Returns true if this tool should handle the initial configuration.
 
 :return: (bool) True if CLI should handle the initial configuration.
 :since:  v0.2.00
-		"""
+        """
 
-		return self.cli_setup
-	#
+        return self.cli_setup
+    #
 
-	def _on_run(self, args):
-	#
-		"""
+    def _on_run(self, args):
+        """
 Callback for execution.
 
 :since: v0.2.00
-		"""
+        """
 
-		Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
-		Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
+        Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
+        Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
-		self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
+        self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
-		if (self.log_handler is not None):
-		#
-			Hook.set_log_handler(self.log_handler)
-			NamedLoader.set_log_handler(self.log_handler)
+        if (self.log_handler is not None):
+            Hook.set_log_handler(self.log_handler)
+            NamedLoader.set_log_handler(self.log_handler)
 
-			self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
-		#
+            self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
+        #
 
-		self.cli_setup = args.cli_setup
+        self.cli_setup = args.cli_setup
 
-		Hook.load("database")
-		Hook.register("dNG.pas.Status.stop", self.stop)
+        Hook.load("database")
+        Hook.register("dNG.pas.Status.stop", self.stop)
 
-		if (args.apply_schema): self.run_apply_schema(args)
-	#
+        if (args.apply_schema): self.run_apply_schema(args)
+    #
 
-	def _on_shutdown(self):
-	#
-		"""
+    def _on_shutdown(self):
+        """
 Callback for shutdown.
 
 :since: v0.2.00
-		"""
+        """
 
-		Hook.call("dNG.pas.Status.onShutdown")
+        Hook.call("dNG.pas.Status.onShutdown")
 
-		Hook.free()
-	#
+        Hook.free()
+    #
 
-	def run_apply_schema(self, args):
-	#
-		"""
+    def run_apply_schema(self, args):
+        """
 Callback for execution.
 
 :since: v0.2.00
-		"""
+        """
 
-		self.output_info("Loading database entities ...")
+        self.output_info("Loading database entities ...")
 
-		with Connection.get_instance() as connection:
-		#
-			Hook.call("dNG.pas.Database.loadAll")
+        with Connection.get_instance() as connection:
+            Hook.call("dNG.pas.Database.loadAll")
 
-			self.output_info("Applying schema ...")
+            self.output_info("Applying schema ...")
 
-			with HookContext("dNG.pas.Database.applySchema"), TransactionContext():
-			#
-				Abstract().metadata.create_all(connection.get_bind())
-			#
-		#
+            with HookContext("dNG.pas.Database.applySchema"), TransactionContext():
+                Abstract().metadata.create_all(connection.get_bind())
+            #
+        #
 
-		self.output_info("Process completed")
-	#
+        self.output_info("Process completed")
+    #
 
-	def stop(self, params = None, last_return = None):
-	#
-		"""
+    def stop(self, params = None, last_return = None):
+        """
 Stops running instances.
 
 :param params: Parameter specified
@@ -159,10 +148,8 @@ Stops running instances.
 
 :return: (None) None to stop communication after this call
 :since:  v0.2.00
-		"""
+        """
 
-		return last_return
-	#
+        return last_return
+    #
 #
-
-##j## EOF

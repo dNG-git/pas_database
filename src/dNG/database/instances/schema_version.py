@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -29,8 +28,7 @@ from dNG.database.types.date_time import DateTime
 from .abstract import Abstract
 
 class SchemaVersion(Abstract):
-#
-	"""
+    """
 Database table listing the current schema version.
 
 :author:     direct Netware Group et al.
@@ -40,52 +38,49 @@ Database table listing the current schema version.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	# pylint: disable=invalid-name
+    # pylint: disable=invalid-name
 
-	__tablename__ = "{0}_schema_version".format(Abstract.get_table_prefix())
-	"""
+    __tablename__ = "{0}_schema_version".format(Abstract.get_table_prefix())
+    """
 SQLAlchemy table name
-	"""
-	db_instance_class = "dNG.database.Schema"
-	"""
+    """
+    db_instance_class = "dNG.database.Schema"
+    """
 Encapsulating SQLAlchemy database instance class name
-	"""
-	db_schema_version = 1
-	"""
+    """
+    db_schema_version = 1
+    """
 Database schema version
-	"""
+    """
 
-	id = Column(VARCHAR(32), primary_key = True)
-	"""
+    id = Column(VARCHAR(32), primary_key = True)
+    """
 schema_version.id
-	"""
-	name = Column(VARCHAR(255), index = True, nullable = False)
-	"""
+    """
+    name = Column(VARCHAR(255), index = True, nullable = False)
+    """
 schema_version.name
-	"""
-	version = Column(BIGINT, nullable = False)
-	"""
+    """
+    version = Column(BIGINT, nullable = False)
+    """
 schema_version.version
-	"""
-	applied = Column(DateTime, default = 0, nullable = False)
-	"""
+    """
+    applied = Column(DateTime, default = 0, nullable = False)
+    """
 schema_version.applied
-	"""
+    """
 
-	def __init__(self, *args, **kwargs):
-	#
-		"""
+    def __init__(self, *args, **kwargs):
+        """
 Constructor __init__(SchemaVersion)
 
 :since: v0.2.00
-		"""
+        """
 
-		Abstract.__init__(self, *args, **kwargs)
-		if (self.id is None): self.id = uuid().hex
-		if (self.applied is None): self.applied = int(time())
-	#
+        Abstract.__init__(self, *args, **kwargs)
+        if (self.id is None): self.id = uuid().hex
+        if (self.applied is None): self.applied = int(time())
+    #
 #
-
-##j## EOF

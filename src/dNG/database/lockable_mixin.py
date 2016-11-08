@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -21,8 +20,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 from .instance import Instance
 
 class LockableMixin(object):
-#
-	"""
+    """
 "LockableMixin" provides methods to handle lockable instances.
 
 :author:     direct Netware Group et al.
@@ -32,15 +30,13 @@ class LockableMixin(object):
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	is_locked = Instance._wrap_getter("locked")
-	"""
+    is_locked = Instance._wrap_getter("locked")
+    """
 Returns true if the entry is locked.
 
 :return: (bool) True if locked
 :since:  v0.2.00
-	"""
+    """
 #
-
-##j## EOF

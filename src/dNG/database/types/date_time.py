@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -24,8 +23,7 @@ from sqlalchemy.types import TypeDecorator
 from time import mktime
 
 class DateTime(TypeDecorator):
-#
-	"""
+    """
 This class provides an SQLAlchemy DateTime type represented as UNIX
 timestamp in Python.
 
@@ -36,22 +34,21 @@ timestamp in Python.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	impl = _DateTime
-	"""
+    impl = _DateTime
+    """
 sqlalchemy.org: The class-level "impl" attribute is required, and can
 reference any TypeEngine class.
-	"""
-	python_type = float
-	"""
+    """
+    python_type = float
+    """
 sqlalchemy.org: Return the Python type object expected to be returned by
 instances of this type, if known.
-	"""
+    """
 
-	def process_bind_param(self, value, dialect):
-	#
-		"""
+    def process_bind_param(self, value, dialect):
+        """
 sqlalchemy.org: Receive a bound parameter value to be converted.
 
 :param value: Data to operate upon, of any type expected by this method in
@@ -62,14 +59,13 @@ sqlalchemy.org: Receive a bound parameter value to be converted.
          should be passed along to the underlying TypeEngine object, and
          from there to the DBAPI execute() method.
 :since:  v0.2.00
-		"""
+        """
 
-		return (None if (value is None) else datetime.fromtimestamp(value))
-	#
+        return (None if (value is None) else datetime.fromtimestamp(value))
+    #
 
-	def process_result_value(self, value, dialect):
-	#
-		"""
+    def process_result_value(self, value, dialect):
+        """
 sqlalchemy.org: Receive a result-row column value to be converted.
 
 :param value: Data to operate upon, of any type expected by this method in
@@ -81,20 +77,17 @@ sqlalchemy.org: Receive a result-row column value to be converted.
          already processed by the underlying TypeEngine object, originally
          from the DBAPI cursor method fetchone() or similar.
 :since:  v0.2.00
-		"""
+        """
 
-		_return = None
+        _return = None
 
-		if (value is not None):
-		#
-			_return = (value.timestamp()
-			           if (hasattr(value, "timestamp")) else
-			           mktime(value.timetuple())
-			          )
-		#
+        if (value is not None):
+            _return = (value.timestamp()
+                       if (hasattr(value, "timestamp")) else
+                       mktime(value.timetuple())
+                      )
+        #
 
-		return _return
-	#
+        return _return
+    #
 #
-
-##j## EOF

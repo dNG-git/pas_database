@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -23,8 +22,7 @@ from sqlalchemy.orm.mapper import configure_mappers
 from dNG.module.named_loader import NamedLoader
 
 class AutoloadingPolymorphicMap(dict):
-#
-	"""
+    """
 "AutoloadingPolymorphicMap" is used to re-trigger the "configure_mappers()"
 after loading SQLAlchemy instances by "dNG.module.NamedLoader".
 
@@ -35,11 +33,10 @@ after loading SQLAlchemy instances by "dNG.module.NamedLoader".
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	def __missing__(self, key):
-	#
-		"""
+    def __missing__(self, key):
+        """
 python.org: If a subclass of dict defines a method __missing__(), if the key
 is not present, the d[key] operation calls that method with the key as
 argument.
@@ -48,16 +45,14 @@ argument.
 
 :return: (object) Polymorphic instance if found
 :since:  v0.2.00
-		"""
+        """
 
-		common_name = "dNG.database.instances.{0}".format(key)
+        common_name = "dNG.database.instances.{0}".format(key)
 
-		if ((not NamedLoader.is_defined(common_name, False))
-		    and NamedLoader.is_defined(common_name)
-		   ): configure_mappers()
+        if ((not NamedLoader.is_defined(common_name, False))
+            and NamedLoader.is_defined(common_name)
+           ): configure_mappers()
 
-		return dict.__getitem__(self, key)
-	#
+        return dict.__getitem__(self, key)
+    #
 #
-
-##j## EOF

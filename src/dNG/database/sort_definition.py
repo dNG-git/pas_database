@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -22,9 +21,9 @@ from dNG.runtime.type_exception import TypeException
 from dNG.runtime.value_exception import ValueException
 
 class SortDefinition(object):
-#
-	"""
-"SortDefinition" is an abstracted .
+    """
+"SortDefinition" is an abstracted class to define instances of database sort
+instructions.
 
 :author:     direct Netware Group et al.
 :copyright:  (C) direct Netware Group - All rights reserved
@@ -33,44 +32,41 @@ class SortDefinition(object):
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	ASCENDING = 1
-	"""
+    ASCENDING = 1
+    """
 Ascending sort direction
-	"""
-	DESCENDING = 2
-	"""
+    """
+    DESCENDING = 2
+    """
 Descending sort direction
-	"""
+    """
 
-	def __init__(self, sort_tuples = None):
-	#
-		"""
+    def __init__(self, sort_tuples = None):
+        """
 Constructor __init__(SortDefinition)
 
 :since: v0.2.00
-		"""
+        """
 
-		self.sort_tuples = [ ]
-		"""
+        self.sort_tuples = [ ]
+        """
 List of tuples defining the attribute and sort direction
-		"""
+        """
 
-		if (sort_tuples is None): sort_tuples = [ ]
+        if (sort_tuples is None): sort_tuples = [ ]
 
-		for sort_tuple in sort_tuples:
-		#
-			if (type(sort_tuple) is not tuple): raise TypeException("Sort definition data type given is not supported")
-			if (len(sort_tuple) != 2): raise ValueException("Sort definition given is not supported")
+        for sort_tuple in sort_tuples:
+            if (type(sort_tuple) is not tuple): raise TypeException("Sort definition data type given is not supported")
+            if (len(sort_tuple) != 2): raise ValueException("Sort definition given is not supported")
 
-			self.append(sort_tuple[0], sort_tuple[1])
-		#
-	#
+            self.append(sort_tuple[0], sort_tuple[1])
+        #
+    #
 
-	def apply(self, db_column_definition, query):
-	#
-		"""
+    def apply(self, db_column_definition, query):
+        """
 Applies the sort order to the given SQLAlchemy query instance.
 
 :param db_column_definition: Database class or column definition
@@ -78,31 +74,29 @@ Applies the sort order to the given SQLAlchemy query instance.
 
 :return: (object) Modified SQLAlchemy query instance
 :since:  v0.2.00
-		"""
+        """
 
-		_return = query
+        _return = query
 
-		is_get_db_column_available = hasattr(db_column_definition, "get_db_column")
+        is_get_db_column_available = hasattr(db_column_definition, "get_db_column")
 
-		for sort_definition in self.sort_tuples:
-		#
-			column = (db_column_definition.get_db_column(sort_definition[0])
-			          if (is_get_db_column_available) else
-			          getattr(db_column_definition, sort_definition[0])
-			         )
+        for sort_definition in self.sort_tuples:
+            column = (db_column_definition.get_db_column(sort_definition[0])
+                      if (is_get_db_column_available) else
+                      getattr(db_column_definition, sort_definition[0])
+                     )
 
-			_return = _return.order_by(column.asc()
-			                           if (sort_definition[1] == SortDefinition.ASCENDING) else
-			                           column.desc()
-			                          )
-		#
+            _return = _return.order_by(column.asc()
+                                       if (sort_definition[1] == SortDefinition.ASCENDING) else
+                                       column.desc()
+                                      )
+        #
 
-		return _return
-	#
+        return _return
+    #
 
-	def append(self, attribute, direction):
-	#
-		"""
+    def append(self, attribute, direction):
+        """
 Appends a sort definition to the current list.
 
 :param attribute: Database entity attribute
@@ -110,28 +104,26 @@ Appends a sort definition to the current list.
 
 :return: (object) SortDefinition instance
 :since:  v0.2.00
-		"""
+        """
 
-		SortDefinition.validate_sort_direction(direction)
-		self.sort_tuples.append(( attribute, direction ))
+        SortDefinition.validate_sort_direction(direction)
+        self.sort_tuples.append(( attribute, direction ))
 
-		return self
-	#
+        return self
+    #
 
-	def clear(self):
-	#
-		"""
+    def clear(self):
+        """
 Clears the current list.
 
 :since: v0.2.00
-		"""
+        """
 
-		self.sort_tuples = [ ]
-	#
+        self.sort_tuples = [ ]
+    #
 
-	def prepend(self, attribute, direction):
-	#
-		"""
+    def prepend(self, attribute, direction):
+        """
 Prepends a sort definition to the current list.
 
 :param attribute: Database entity attribute
@@ -139,25 +131,22 @@ Prepends a sort definition to the current list.
 
 :return: (object) SortDefinition instance
 :since:  v0.2.00
-		"""
+        """
 
-		SortDefinition.validate_sort_direction(direction)
-		self.sort_tuples.insert(0, ( attribute, direction ))
+        SortDefinition.validate_sort_direction(direction)
+        self.sort_tuples.insert(0, ( attribute, direction ))
 
-		return self
-	#
+        return self
+    #
 
-	@staticmethod
-	def validate_sort_direction(direction):
-	#
-		"""
+    @staticmethod
+    def validate_sort_direction(direction):
+        """
 Validates the given sort direction.
 
 :since: v0.2.00
-		"""
+        """
 
-		if (direction not in ( SortDefinition.ASCENDING, SortDefinition.DESCENDING )): raise ValueException("Sort definition given is not supported")
-	#
+        if (direction not in ( SortDefinition.ASCENDING, SortDefinition.DESCENDING )): raise ValueException("Sort definition given is not supported")
+    #
 #
-
-##j## EOF

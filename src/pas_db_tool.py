@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -25,19 +24,12 @@ import sys
 db_tool = None
 
 try:
-#
-	db_tool = DbTool()
-	db_tool.run()
-#
+    db_tool = DbTool()
+    db_tool.run()
 except KeyboardInterrupt: pass
 except Exception as handled_exception:
+    if (db_tool is not None):
+        db_tool.error(handled_exception)
+        db_tool.stop()
+    else: sys.stderr.write("{0!r}".format(sys.exc_info()))
 #
-	if (db_tool is not None):
-	#
-		db_tool.error(handled_exception)
-		db_tool.stop()
-	#
-	else: sys.stderr.write("{0!r}".format(sys.exc_info()))
-#
-
-##j## EOF

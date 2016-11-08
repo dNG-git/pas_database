@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -24,8 +23,7 @@ from dNG.database.connection import Connection
 from dNG.runtime.iterator import Iterator
 
 class InstanceIterator(Iterator):
-#
-	"""
+    """
 "InstanceIterator" provides an instance wrapping iterator to encapsulate
 SQLAlchemy database instances with an given class.
 
@@ -36,11 +34,10 @@ SQLAlchemy database instances with an given class.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	def __init__(self, entity, cursor, buffered = False, instance_class = None, *args, **kwargs):
-	#
-		"""
+    def __init__(self, entity, cursor, buffered = False, instance_class = None, *args, **kwargs):
+        """
 Constructor __init__(InstanceIterator)
 
 :param entity: SQLAlchemy database entity
@@ -49,134 +46,121 @@ Constructor __init__(InstanceIterator)
 :param instance_class: Encapsulating database instance class
 
 :since: v0.2.00
-		"""
+        """
 
-		self.args = args
-		"""
+        self.args = args
+        """
 Arguments given to the contructor of the encapsulating database instance
-		"""
-		self.buffered = buffered
-		"""
+        """
+        self.buffered = buffered
+        """
 True if the results are buffered in a list.
-		"""
-		self.instance_class = instance_class
-		"""
+        """
+        self.instance_class = instance_class
+        """
 Instance class encapsulating the database instance
-		"""
-		self.kwargs = kwargs
-		"""
+        """
+        self.kwargs = kwargs
+        """
 Keyword arguments given to the contructor of the encapsulating database
 instance
-		"""
-		self.result = None
-		"""
+        """
+        self.result = None
+        """
 Results being interated
-		"""
+        """
 
-		with Connection.get_instance() as connection:
-		#
-			if (buffered): self._init_buffered_results(connection, entity, cursor)
-			else: self.result = connection.query(entity).instances(cursor)
-		#
-	#
+        with Connection.get_instance() as connection:
+            if (buffered): self._init_buffered_results(connection, entity, cursor)
+            else: self.result = connection.query(entity).instances(cursor)
+        #
+    #
 
-	def __iter__(self):
-	#
-		"""
+    def __iter__(self):
+        """
 python.org: Return an iterator object.
 
 :return: (object) Iterator object
 :since:  v0.2.00
-		"""
+        """
 
-		return (iter(self.result) if (self.instance_class is None) else self)
-	#
+        return (iter(self.result) if (self.instance_class is None) else self)
+    #
 
-	def __next__(self):
-	#
-		"""
+    def __next__(self):
+        """
 python.org: Return the next item from the container.
 
 :return: (object) Result object
 :since:  v0.2.00
-		"""
+        """
 
-		db_instance = None
+        db_instance = None
 
-		if (self.buffered):
-		#
-			if (len(self.result) < 1): raise StopIteration()
-			return self.result.pop(0)
-		#
-		else:
-		#
-			db_instance = next(self.result)
+        if (self.buffered):
+            if (len(self.result) < 1): raise StopIteration()
+            return self.result.pop(0)
+        else:
+            db_instance = next(self.result)
 
-			return (db_instance
-			        if (self.instance_class is None) else
-			        self.instance_class(db_instance, *self.args, **self.kwargs)
-			       )
-		#
-	#
+            return (db_instance
+                    if (self.instance_class is None) else
+                    self.instance_class(db_instance, *self.args, **self.kwargs)
+                   )
+        #
+    #
 
-	def _ensure_populated_db_instance(self, db_instance):
-	#
-		"""
+    def _ensure_populated_db_instance(self, db_instance):
+        """
 Loads and initializes instances for the buffer.
 
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
 :since: v0.2.00
-		"""
+        """
 
-		_return = db_instance
+        _return = db_instance
 
-		if (self.instance_class is None
-		    or (not issubclass(self.instance_class.get_db_class(self.instance_class),
-		                       db_instance.__class__
-		                      )
-		       )
-		   ):
-		#
-			instance_state = inspect(db_instance)
+        if (self.instance_class is None
+            or (not issubclass(self.instance_class.get_db_class(self.instance_class),
+                               db_instance.__class__
+                              )
+               )
+           ):
+            instance_state = inspect(db_instance)
 
-			if (len(instance_state.expired_attributes) > 0):
-			#
-				_return = (Connection.get_instance()
-				           .query(db_instance.__class__)
-				           .populate_existing()
-				           .get(instance_state.identity)
-				          )
-			#
-		#
+            if (len(instance_state.expired_attributes) > 0):
+                _return = (Connection.get_instance()
+                           .query(db_instance.__class__)
+                           .populate_existing()
+                           .get(instance_state.identity)
+                          )
+            #
+        #
 
-		return _return
-	#
+        return _return
+    #
 
-	def _init_buffered_results(self, connection, entity, cursor):
-	#
-		"""
+    def _init_buffered_results(self, connection, entity, cursor):
+        """
 Loads and initializes instances for the buffer.
 
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
 :since: v0.2.00
-		"""
+        """
 
-		self.result = [ ]
+        self.result = [ ]
 
-		for db_instance in connection.query(entity).instances(cursor):
-		#
-			db_instance = self._ensure_populated_db_instance(db_instance)
+        for db_instance in connection.query(entity).instances(cursor):
+            db_instance = self._ensure_populated_db_instance(db_instance)
 
-			self.result.append(db_instance
-			                   if (self.instance_class is None) else
-			                   self.instance_class(db_instance, *self.args, **self.kwargs)
-			                  )
-		#
-	#
+            self.result.append(db_instance
+                               if (self.instance_class is None) else
+                               self.instance_class(db_instance, *self.args, **self.kwargs)
+                              )
+        #
+    #
 #
-
-##j## EOF

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -21,8 +20,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 from dNG.runtime.value_exception import ValueException
 
 class NothingMatchedException(ValueException):
-#
-	"""
+    """
 "NothingMatchedException" is raised when no entry matched the given
 query condition.
 
@@ -33,21 +31,18 @@ query condition.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	def __init__(self, value = "Nothing matched", _exception = None):
-	#
-		"""
+    def __init__(self, value = "Nothing matched", _exception = None):
+        """
 Constructor __init__(NothingMatchedException)
 
 :param value: Exception message value
 :param _exception: Inner exception
 
 :since: v0.2.00
-		"""
+        """
 
-		ValueException.__init__(self, value, _exception)
-	#
+        ValueException.__init__(self, value, _exception)
+    #
 #
-
-##j## EOF

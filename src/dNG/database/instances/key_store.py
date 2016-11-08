@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##j## BOF
 
 """
 direct PAS
@@ -27,8 +26,7 @@ from dNG.database.types.date_time import DateTime
 from .abstract import Abstract
 
 class KeyStore(Abstract):
-#
-	"""
+    """
 Database based key-value store.
 
 :author:     direct Netware Group et al.
@@ -38,55 +36,52 @@ Database based key-value store.
 :since:      v0.2.00
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
-	"""
+    """
 
-	# pylint: disable=invalid-name
+    # pylint: disable=invalid-name
 
-	__tablename__ = "{0}_key_store".format(Abstract.get_table_prefix())
-	"""
+    __tablename__ = "{0}_key_store".format(Abstract.get_table_prefix())
+    """
 SQLAlchemy table name
-	"""
-	db_instance_class = "dNG.data.text.KeyStore"
-	"""
+    """
+    db_instance_class = "dNG.data.text.KeyStore"
+    """
 Encapsulating SQLAlchemy database instance class name
-	"""
-	db_schema_version = 1
-	"""
+    """
+    db_schema_version = 1
+    """
 Database schema version
-	"""
+    """
 
-	id = Column(VARCHAR(32), primary_key = True)
-	"""
+    id = Column(VARCHAR(32), primary_key = True)
+    """
 keystore.id
-	"""
-	key = Column(VARCHAR(32), nullable = False, unique = True)
-	"""
+    """
+    key = Column(VARCHAR(32), nullable = False, unique = True)
+    """
 keystore.key
-	"""
-	validity_start_time = Column(DateTime, default = 0, nullable = False)
-	"""
+    """
+    validity_start_time = Column(DateTime, default = 0, nullable = False)
+    """
 keystore.validity_start_time
-	"""
-	validity_end_time = Column(DateTime, default = 0, nullable = False)
-	"""
+    """
+    validity_end_time = Column(DateTime, default = 0, nullable = False)
+    """
 keystore.validity_end_time
-	"""
-	value = Column(TEXT)
-	"""
+    """
+    value = Column(TEXT)
+    """
 keystore.value
-	"""
+    """
 
-	def __init__(self, *args, **kwargs):
-	#
-		"""
+    def __init__(self, *args, **kwargs):
+        """
 Constructor __init__(KeyStore)
 
 :since: v0.2.00
-		"""
+        """
 
-		Abstract.__init__(self, *args, **kwargs)
-		if (self.id is None): self.id = uuid().hex
-	#
+        Abstract.__init__(self, *args, **kwargs)
+        if (self.id is None): self.id = uuid().hex
+    #
 #
-
-##j## EOF
