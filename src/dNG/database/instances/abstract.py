@@ -17,6 +17,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+# pylint: disable=import-error,no-name-in-module
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import reconstructor
 
@@ -36,7 +38,7 @@ This class provides abstract SQLAlchemy database instances.
              Mozilla Public License, v. 2.0
     """
 
-    # pylint: disable=unused-argument
+    # pylint: disable=bad-staticmethod-argument, unused-argument
 
     __abstract__ = True
     """

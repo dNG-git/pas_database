@@ -17,6 +17,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+# pylint: disable=import-error,no-name-in-module
+
 from sqlalchemy.sql.expression import and_, or_
 
 from dNG.runtime.type_exception import TypeException
@@ -381,6 +383,8 @@ Returns a SQLalchemy condition.
 :return: (object) SQLalchemy condition; None if unknown type or empty
 :since:  v0.2.00
         """
+
+        # pylint: disable=protected-access
 
         _return = None
 

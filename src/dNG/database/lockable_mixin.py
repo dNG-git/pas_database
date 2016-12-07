@@ -32,6 +32,8 @@ class LockableMixin(object):
              Mozilla Public License, v. 2.0
     """
 
+    # pylint: disable=protected-access
+
     is_locked = Instance._wrap_getter("locked")
     """
 Returns true if the entry is locked.

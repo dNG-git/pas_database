@@ -17,6 +17,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+# pylint: disable=import-error,no-name-in-module
+
 from dNG.runtime.type_exception import TypeException
 from dNG.runtime.value_exception import ValueException
 

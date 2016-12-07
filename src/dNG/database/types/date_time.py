@@ -17,10 +17,13 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+# pylint: disable=abstract-method
+
 from datetime import datetime
+from time import mktime
+
 from sqlalchemy.types import DateTime as _DateTime
 from sqlalchemy.types import TypeDecorator
-from time import mktime
 
 class DateTime(TypeDecorator):
     """

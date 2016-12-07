@@ -17,8 +17,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-from sqlalchemy.inspection import inspect
-from sqlalchemy.engine.result import ResultProxy
+# pylint: disable=import-error,no-name-in-module
+
 from threading import local
 
 from dNG.module.named_loader import NamedLoader
@@ -27,6 +27,9 @@ from dNG.runtime.not_implemented_exception import NotImplementedException
 from dNG.runtime.thread_lock import ThreadLock
 from dNG.runtime.type_exception import TypeException
 from dNG.runtime.value_exception import ValueException
+
+from sqlalchemy.inspection import inspect
+from sqlalchemy.engine.result import ResultProxy
 
 from .connection import Connection
 from .instance_iterator import InstanceIterator
@@ -47,7 +50,7 @@ instance.
              Mozilla Public License, v. 2.0
     """
 
-    # pylint: disable=unused-argument
+    # pylint: disable=bad-staticmethod-argument, unused-argument
 
     _DB_INSTANCE_CLASS = None
     """
@@ -211,7 +214,7 @@ Checks for an active transaction or begins one.
 :since: v0.2.00
         """
 
-        # pylint: disable=broad-except,maybe-no-member,protected-access
+        # pylint: disable=broad-except, protected-access
 
         if (self.local.connection.get_transaction_depth() < 1):
             self.local.connection.begin()
@@ -697,8 +700,6 @@ Sets the value of the corresponding attribute.
 
 :since: v0.2.00
             """
-
-            # pylint: disable=star-args
 
             attribute = { key: value }
             self.set_data_attributes(**attribute)

@@ -17,8 +17,9 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
+# pylint: disable=import-error, no-name-in-module
+
 from random import randrange
-from sqlalchemy.sql.expression import and_
 from time import time
 
 from dNG.data.binary import Binary
@@ -31,6 +32,8 @@ from dNG.database.nothing_matched_exception import NothingMatchedException
 from dNG.runtime.io_exception import IOException
 from dNG.runtime.type_exception import TypeException
 from dNG.runtime.value_exception import ValueException
+
+from sqlalchemy.sql.expression import and_
 
 class KeyStore(Instance):
     """
@@ -45,7 +48,7 @@ Database based encoded key-value store.
              Mozilla Public License, v. 2.0
     """
 
-    # pylint: disable=maybe-no-member
+    # pylint: disable=bad-staticmethod-argument
 
     _DB_INSTANCE_CLASS = _DbKeyStore
     """

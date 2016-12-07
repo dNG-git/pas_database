@@ -21,8 +21,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from os import path
 from random import randrange
-from sqlalchemy.engine import engine_from_config
-from sqlalchemy.orm.session import Session
 from threading import current_thread, local
 from weakref import ref
 
@@ -35,6 +33,9 @@ from dNG.module.named_loader import NamedLoader
 from dNG.runtime.instance_lock import InstanceLock
 from dNG.runtime.thread_lock import ThreadLock
 from dNG.runtime.value_exception import ValueException
+
+from sqlalchemy.engine import engine_from_config
+from sqlalchemy.orm.session import Session
 
 class Connection(object):
     """
