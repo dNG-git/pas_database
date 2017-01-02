@@ -247,7 +247,7 @@ Enters the connection context.
 :since: v0.2.00
         """
 
-        # pylint: disable=broad-except,maybe-no-member,protected-access
+        # pylint: disable=broad-except, protected-access
 
         if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
@@ -413,8 +413,6 @@ Insert the instance into the database.
 :since: v0.2.00
         """
 
-        # pylint: disable=maybe-no-member
-
         if (inspect(self.local.db_instance).transient): self.local.connection.add(self.local.db_instance)
     #
 
@@ -471,8 +469,6 @@ Returns true if the instance is already saved in the database.
 :return: (bool) True if known
 :since:  v0.2.00
         """
-
-        # pylint: disable=maybe-no-member
 
         return (self.local.db_instance is not None and inspect(self.local.db_instance).has_identity)
     #
