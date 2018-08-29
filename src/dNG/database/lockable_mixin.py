@@ -34,11 +34,11 @@ class LockableMixin(object):
 
     # pylint: disable=protected-access
 
-    is_locked = Instance._wrap_getter("locked")
+    is_locked = Instance._data_attribute_readonly_property("locked")
     """
 Returns true if the entry is locked.
 
 :return: (bool) True if locked
-:since:  v0.2.00
+:since:  v1.0.0
     """
 #

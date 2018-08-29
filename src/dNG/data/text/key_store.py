@@ -22,6 +22,9 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 from random import randrange
 from time import time
 
+try: from collections.abc import Mapping
+except ImportError: from collections import Mapping
+
 from dNG.data.binary import Binary
 from dNG.data.json_resource import JsonResource
 from dNG.data.settings import Settings
@@ -64,58 +67,31 @@ Constructor __init__(KeyStore)
 
         Instance.__init__(self, db_instance)
 
-        self.db_id = (None if (db_instance is None) else self.get_id())
+        self._id = (None if (db_instance is None) else self['id'])
         """
 Database ID used for reloading
         """
     #
 
-    get_id = Instance._wrap_getter("id")
-    """
-Returns the ID of this instance.
-
-:return: (str) KeyStore entry ID; None if undefined
-:since:  v0.2.00
-    """
-
-    get_key = Instance._wrap_getter("key")
-    """
-Returns the key of this instance.
-
-:return: (str) KeyStore entry key; None if undefined
-:since:  v0.2.00
-    """
-
-    def get_value_dict(self):
-        """
-Returns the values originally given as a dict to this KeyStore instance.
-
-:return: (dict) Values from the KeyStore
-:since:  v0.2.00
-        """
-
-        with self: _return = JsonResource().json_to_data(self.local.db_instance.value)
-        if (_return is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
-        return _return
-    #
-
+    @property
     def is_reloadable(self):
         """
 Returns true if the instance can be reloaded automatically in another
 thread.
 
 :return: (bool) True if reloadable
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
-        return (self.db_id is not None)
+        return (self._id is not None)
     #
 
+    @property
     def is_valid(self):
         """
 Returns true if the KeyStore entry is active and valid.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         with self:
@@ -128,6 +104,40 @@ Returns true if the KeyStore entry is active and valid.
         return _return
     #
 
+    @property
+    def value_dict(self):
+        """
+Returns the values originally given as a dict to this KeyStore instance.
+
+:return: (dict) Values from the KeyStore
+:since:  v1.0.0
+        """
+
+        with self:
+            _return = ({ }
+                       if (self.local.db_instance.value is None) else
+                       JsonResource.json_to_data(self.local.db_instance.value)
+                      )
+        #
+
+        if (_return is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
+        return _return
+    #
+
+    @value_dict.setter
+    def value_dict(self, data):
+        """
+Sets the values given as a dict as the value of this KeyStore instance.
+
+:param data: Dict to be set as value
+
+:since: v1.0.0
+        """
+
+        if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
+        with self: self._set_data_attribute("value", JsonResource().data_to_json(data))
+    #
+
     def _reload(self):
         """
 Implementation of the reloading SQLAlchemy database instance logic.
@@ -136,37 +146,26 @@ Implementation of the reloading SQLAlchemy database instance logic.
         """
 
         if (self.local.db_instance is None):
-            if (self.db_id is None): raise IOException("Database instance is not reloadable.")
-            self.local.db_instance = self.local.connection.query(_DbKeyStore).filter(_DbKeyStore.id == self.db_id).one()
+            if (self._id is None): raise IOException("Database instance is not reloadable.")
+            self.local.db_instance = self.local.connection.query(_DbKeyStore).filter(_DbKeyStore.id == self._id).one()
         else: Instance._reload(self)
     #
 
-    def set_data_attributes(self, **kwargs):
+    def _set_data_attribute(self, attribute, value):
         """
-Sets values given as keyword arguments to this method.
+Sets data for the requested attribute.
 
-:since: v0.2.00
+:param attribute: Requested attribute
+:param value: Value for the requested attribute
+
+:since: v1.0.0
         """
 
-        with self:
-            if ("key" in kwargs): self.local.db_instance.key = Binary.utf8(kwargs['key'])
-            if ("validity_start_time" in kwargs): self.local.db_instance.validity_start_time = kwargs['validity_start_time']
-            if ("validity_end_time" in kwargs): self.local.db_instance.validity_end_time = kwargs['validity_end_time']
-            if ("value" in kwargs): self.local.db_instance.value = Binary.utf8(kwargs['value'])
+        if (attribute == "value" and isinstance(value, Mapping)): self.value_dict = value
+        else:
+            if (attribute in ( "key", "value" )): value = Binary.utf8(value)
+            Instance._set_data_attribute(self, attribute, value)
         #
-    #
-
-    def set_value_dict(self, data):
-        """
-Sets the values given as a dict as the value of this KeyStore instance.
-
-:param data: Dict to be set as value
-
-:since: v0.2.00
-        """
-
-        if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
-        self.set_data_attributes(value = JsonResource().data_to_json(data))
     #
 
     @staticmethod
@@ -198,7 +197,7 @@ Load KeyStore entry from database.
                 Instance._ensure_db_class(cls, db_instance)
 
                 _return = KeyStore(db_instance)
-                if (not _return.is_valid()): _return = None
+                if (not _return.is_valid): _return = None
             #
         #
 

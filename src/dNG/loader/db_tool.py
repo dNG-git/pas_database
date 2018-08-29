@@ -26,9 +26,9 @@ from dNG.database.connection import Connection
 from dNG.database.instances.abstract import Abstract
 from dNG.database.transaction_context import TransactionContext
 from dNG.loader.interactive_cli import InteractiveCli
-from dNG.module.named_loader import NamedLoader
 from dNG.plugins.hook import Hook
 from dNG.plugins.hook_context import HookContext
+from dNG.runtime.named_loader import NamedLoader
 
 class DbTool(InteractiveCli):
     """
@@ -69,15 +69,32 @@ True if this tool should handle the initial configuration.
         InteractiveCli.register_shutdown_callback(self._on_shutdown)
     #
 
+    @property
     def is_cli_setup(self):
         """
 Returns true if this tool should handle the initial configuration.
 
 :return: (bool) True if CLI should handle the initial configuration.
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return self.cli_setup
+    #
+
+    @InteractiveCli.log_handler.setter
+    def log_handler(self, log_handler):
+        """
+Sets the LogHandler.
+
+:param log_handler: LogHandler to use
+
+:since: v1.0.0
+        """
+
+        InteractiveCli.log_handler.fset(self, log_handler)
+
+        Hook.set_log_handler(log_handler)
+        NamedLoader.set_log_handler(log_handler)
     #
 
     def _on_run(self, args):
@@ -92,19 +109,16 @@ Callback for execution.
         Settings.read_file("{0}/settings/pas_core.json".format(Settings.get("path_data")), True)
         Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
-        self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
+        log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
 
-        if (self.log_handler is not None):
-            Hook.set_log_handler(self.log_handler)
-            NamedLoader.set_log_handler(self.log_handler)
-
-            self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (log_handler is not None):
+            self.log_handler = log_handler
+            log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
         #
 
         self.cli_setup = args.cli_setup
 
         Hook.load("database")
-        Hook.register("dNG.pas.Status.stop", self.stop)
 
         if (args.apply_schema): self.run_apply_schema(args)
     #
@@ -115,8 +129,6 @@ Callback for shutdown.
 
 :since: v0.2.00
         """
-
-        Hook.call("dNG.pas.Status.onShutdown")
 
         Hook.free()
     #
@@ -141,19 +153,5 @@ Callback for execution.
         #
 
         self.output_info("Process completed")
-    #
-
-    def stop(self, params = None, last_return = None):
-        """
-Stops running instances.
-
-:param params: Parameter specified
-:param last_return: The return value from the last hook called.
-
-:return: (None) None to stop communication after this call
-:since:  v0.2.00
-        """
-
-        return last_return
     #
 #
