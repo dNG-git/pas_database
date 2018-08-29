@@ -49,7 +49,7 @@ SQLAlchemy table name
     """
 Encapsulating SQLAlchemy database instance class name
     """
-    db_schema_version = 1
+    db_schema_version = 2
     """
 Database schema version
     """
@@ -58,7 +58,7 @@ Database schema version
     """
 keystore.id
     """
-    key = Column(VARCHAR(32), nullable = False, unique = True)
+    key = Column(VARCHAR(255), nullable = False, unique = True)
     """
 keystore.key
     """
