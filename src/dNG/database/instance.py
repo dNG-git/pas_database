@@ -21,9 +21,11 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from threading import local
 
-from dNG.module.named_loader import NamedLoader
+try: from collections.abc import MutableMapping
+except ImportError: from collections import MutableMapping
+
 from dNG.runtime.io_exception import IOException
-from dNG.runtime.not_implemented_exception import NotImplementedException
+from dNG.runtime.named_loader import NamedLoader
 from dNG.runtime.thread_lock import ThreadLock
 from dNG.runtime.type_exception import TypeException
 from dNG.runtime.value_exception import ValueException
@@ -36,7 +38,7 @@ from .instance_iterator import InstanceIterator
 from .sort_definition import SortDefinition
 from .instances.abstract import Abstract
 
-class Instance(object):
+class Instance(MutableMapping):
     """
 "Instance" is an abstract object encapsulating an SQLAlchemy database
 instance.
@@ -66,6 +68,8 @@ Constructor __init__(Instance)
 :since: v0.2.00
         """
 
+        MutableMapping.__init__(self)
+
         self._db_context_sort_definition = { }
         """
 Context specific sort definition instances
@@ -82,13 +86,26 @@ thread-local instance
         """
 Thread safety lock
         """
-        self.log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
+        self._log_handler = NamedLoader.get_singleton("dNG.data.logging.LogHandler", False)
         """
 The LogHandler is called whenever debug messages should be logged or errors
 happened.
         """
 
         self.local.db_instance = db_instance
+    #
+
+    def __delitem__(self, key):
+        """
+python.org: Called to implement deletion of self[key].
+
+:param key: Database instance attribute
+
+:since: v1.0.0
+        """
+
+        if (self.is_data_attribute_defined(key)): raise IOException("Database instance attributes can not be deleted")
+        object.__delitem__(self, key)
     #
 
     def __enter__(self):
@@ -112,6 +129,44 @@ python.org: Exit the runtime context related to this object.
 
         self._exit_context(exc_type, exc_value, traceback)
         return False
+    #
+
+    def __getitem__(self, key):
+        """
+python.org: Called to implement evaluation of self[key].
+
+:param key: Database instance to access
+
+:return: (mixed) Database attribute value
+:since:  v1.0.0
+        """
+
+        with self: return self._get_data_attribute(key)
+    #
+
+    def __iter__(self):
+        """
+python.org: Return an iterator object.
+
+:return: (object) Iterator object
+:since:  v1.0.0
+        """
+
+        db_instance_class = Instance.get_db_class(self.__class__)
+        if (db_instance_class is None): raise IOException("Database instance attributes can not be accessed")
+
+        for column in db_instance_class.__table__.columns: yield column.key
+    #
+
+    def __len__(self):
+        """
+python.org: Called to implement the built-in function len().
+
+:return: (int) Number of database instance attributes
+:since: v1.0.0
+        """
+
+        return len(Instance.get_db_class(self.__class__).__table__.columns)
     #
 
     def __new__(cls, *args, **kwargs):
@@ -141,6 +196,56 @@ python.org: Called to create a new instance of class cls.
         return _return
     #
 
+    def __setitem__(self, key, value):
+        """
+python.org: Called to implement assignment to self[key].
+
+:param key: Database instance attribute
+:param value: Database instance attribute value
+
+:since: v1.0.0
+        """
+
+        with self: self._set_data_attribute(key, value)
+    #
+
+    @property
+    def _db_instance(self):
+        """
+Returns the actual database entry instance.
+
+:return: (object) Database entry instance
+:since:  v1.0.0
+        """
+
+        with self: return self.local.db_instance
+    #
+
+    @property
+    def is_known(self):
+        """
+Returns true if the instance is already saved in the database.
+
+:return: (bool) True if known
+:since:  v1.0.0
+        """
+
+        return (self.local.db_instance is not None and inspect(self.local.db_instance).has_identity)
+    #
+
+    @property
+    def is_reloadable(self):
+        """
+Returns true if the instance can be reloaded automatically in another
+thread.
+
+:return: (bool) True if reloadable
+:since:  v1.0.0
+        """
+
+        return False
+    #
+
     def _apply_db_sort_definition(self, query, context = None):
         """
 Applies the sort order to the given SQLAlchemy query instance.
@@ -152,7 +257,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 :since:  v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}._apply_db_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
         _return = query
 
         sort_definition = self._get_db_sort_definition(context)
@@ -172,17 +277,17 @@ Deletes this entry from the database.
 :since:  v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.delete()- (#echo(__LINE__)#)", self, context = "pas_database")
         _return = True
 
-        if (self.is_known()):
-            with self:
+        with self:
+            if (self.is_known):
                 self._ensure_transaction_context()
 
                 self.local.connection.delete(self.local.db_instance)
                 self.local.db_instance = None
-            #
-        else: _return = False
+            else: _return = False
+        #
 
         return _return
     #
@@ -232,7 +337,7 @@ Checks for an initialized SQLAlchemy database instance or create one.
         if (not hasattr(self.local, "db_instance")): self.local.db_instance = None
 
         if (self.local.db_instance is None):
-            if (self.is_reloadable()): self.reload()
+            if (self.is_reloadable): self.reload()
             else:
                 db_class = Instance.get_db_class(self.__class__)
                 if (db_class is not None): self.local.db_instance = db_class()
@@ -249,7 +354,7 @@ Enters the connection context.
 
         # pylint: disable=broad-except, protected-access
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__enter__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
         is_connection_context_entered = False
 
@@ -295,7 +400,7 @@ Exits the connection context.
 
         # pylint: disable=broad-except,protected-access
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.__exit__()- (#echo(__LINE__)#)", self, context = "pas_database")
 
         self.local.context_depth -= 1
 
@@ -306,7 +411,7 @@ Exits the connection context.
 
                 self.local.wrapped_transaction = False
             except Exception as handled_exception:
-                if (self.log_handler is not None): self.log_handler.error(handled_exception, context = "pas_database")
+                if (self._log_handler is not None): self._log_handler.error(handled_exception, context = "pas_database")
                 if (exc_type is None and exc_value is None): self.local.connection.rollback()
             #
         #
@@ -338,7 +443,7 @@ Returns the requested attributes.
 :since:  v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.get_data_attributes()- (#echo(__LINE__)#)", self, context = "pas_database")
         _return = { }
 
         with self:
@@ -346,17 +451,6 @@ Returns the requested attributes.
         #
 
         return _return
-    #
-
-    def _get_db_instance(self):
-        """
-Returns the actual database entry instance.
-
-:return: (object) Database entry instance
-:since:  v0.2.00
-        """
-
-        with self: return self.local.db_instance
     #
 
     def _get_db_sort_definition(self, context = None):
@@ -389,7 +483,7 @@ Returns the default sort definition list.
 :since:  v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}._get_default_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
         return SortDefinition()
     #
 
@@ -462,29 +556,6 @@ Returns true if at least one of the attributes is "None".
         return _return
     #
 
-    def is_known(self):
-        """
-Returns true if the instance is already saved in the database.
-
-:return: (bool) True if known
-:since:  v0.2.00
-        """
-
-        return (self.local.db_instance is not None and inspect(self.local.db_instance).has_identity)
-    #
-
-    def is_reloadable(self):
-        """
-Returns true if the instance can be reloaded automatically in another
-thread.
-
-:return: (bool) True if reloadable
-:since:  v0.2.00
-        """
-
-        return False
-    #
-
     def reload(self):
         """
 Reload instance data from the database.
@@ -492,7 +563,7 @@ Reload instance data from the database.
 :since: v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.reload()- (#echo(__LINE__)#)", self, context = "pas_database")
 
         with self._lock:
             if (not hasattr(self.local, "db_instance")): self._ensure_thread_local_instance()
@@ -518,14 +589,28 @@ Saves changes of the instance into the database.
 :since: v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.save()- (#echo(__LINE__)#)", self, context = "pas_database")
 
         with self:
             self._ensure_transaction_context()
 
-            if (self.is_known()): self._update()
+            if (self.is_known): self._update()
             else: self._insert()
         #
+    #
+
+    def _set_data_attribute(self, attribute, value):
+        """
+Sets data for the requested attribute.
+
+:param attribute: Requested attribute
+:param value: Value for the requested attribute
+
+:since: v1.0.0
+        """
+
+        if (hasattr(self.local.db_instance, attribute)): setattr(self.local.db_instance, attribute, value)
+        else: self._set_unknown_data_attribute(attribute, value)
     #
 
     def set_data_attributes(self, **kwargs):
@@ -535,7 +620,9 @@ Sets values given as keyword arguments to this method.
 :since: v0.2.00
         """
 
-        raise NotImplementedException()
+        with self:
+            for key in kwargs: self._set_data_attribute(key, kwargs[key])
+        #
     #
 
     def set_sort_definition(self, sort_definition, context = None):
@@ -543,16 +630,30 @@ Sets values given as keyword arguments to this method.
 Sets the sort definition list.
 
 :param sort_definition: Sort definition list
+:param context: Sort definition context
 
 :since: v0.2.00
         """
 
-        if (self.log_handler is not None): self.log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
+        if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}.set_sort_definition()- (#echo(__LINE__)#)", self, context = "pas_database")
 
         if (not isinstance(sort_definition, SortDefinition)): raise TypeException("Sort definition type given is not supported")
 
         if (context is None): self._db_sort_definition = sort_definition
         else: self._db_context_sort_definition[context] = sort_definition
+    #
+
+    def _set_unknown_data_attribute(self, attribute, value):
+        """
+Sets data for the requested attribute not defined for this instance.
+
+:param attribute: Requested attribute
+:param value: Value for the requested attribute
+
+:since: v1.0.0
+        """
+
+        raise ValueException("Attribute '{0}' is not defined on database instance".format(attribute))
     #
 
     def _update(self):
@@ -573,7 +674,7 @@ database instances with an given class.
 
 :param cls: Encapsulating database instance class
 :param entity: SQLAlchemy database entity
-:param cursor: SQLAlchemy result cursor
+:param result: SQLAlchemy result cursor
 
 :return: (Iterator) InstanceIterator object
 :since:  v0.2.00
@@ -581,6 +682,72 @@ database instances with an given class.
 
         if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
         return InstanceIterator(entity, result, True, cls, *args, **kwargs)
+    #
+
+    @staticmethod
+    def _data_attribute_property(key):
+        """
+Creates a Python instance attribute for the given database entry value key.
+
+:param key: Database entry value key
+
+:return: (object) Proxy method
+:since:  v1.0.0
+        """
+
+        @property
+        def proxymethod(self):
+            """
+Returns the value of the corresponding attribute.
+
+:return: (mixed) Attribute value
+:since:  v1.0.0
+            """
+
+            with self: return self._get_data_attribute(key)
+        #
+
+        @proxymethod.setter
+        def proxymethod(self, value):
+            """
+Sets the value of the corresponding attribute.
+
+:param value: Attribute value
+
+:since: v1.0.0
+            """
+
+            with self: self._set_data_attribute(key, value)
+        #
+
+        return proxymethod
+    #
+
+    @staticmethod
+    def _data_attribute_readonly_property(key):
+        """
+Creates a read-only Python instance attribute for the given database entry
+value key.
+
+:param key: Database entry value key
+
+:return: (object) Proxy method
+:since:  v1.0.0
+        """
+
+        @property
+        def proxymethod(self):
+            """
+Returns the value of the corresponding attribute.
+
+:return: (mixed) Attribute value
+:since:  v1.0.0
+            """
+
+            with self: return self._get_data_attribute(key)
+        #
+
+        return proxymethod
     #
 
     @staticmethod
@@ -641,7 +808,7 @@ database instances with an given class.
 
 :param cls: Encapsulating database instance class
 :param entity: SQLAlchemy database entity
-:param cursor: SQLAlchemy result cursor
+:param result: SQLAlchemy result cursor
 
 :return: (Iterator) InstanceIterator object
 :since:  v0.2.00
@@ -649,58 +816,5 @@ database instances with an given class.
 
         if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
         return InstanceIterator(entity, result, False, cls, *args, **kwargs)
-    #
-
-    @staticmethod
-    def _wrap_getter(key):
-        """
-Wraps a "get*" method to return the given database entry value or
-alternatively the given default one.
-
-:param key: Key to create the "get*" method for
-
-:return: (object) Proxy method
-:since:  v0.2.00
-        """
-
-        def proxymethod(self):
-            """
-Returns the value of the corresponding attribute.
-
-:return: (mixed) Attribute value
-:since:  v0.2.00
-            """
-
-            return self.get_data_attributes(key)[key]
-        #
-
-        return proxymethod
-    #
-
-    @staticmethod
-    def _wrap_setter(key):
-        """
-Wraps a "set*" method to set the given database entry value.
-
-:param key: Key to create the "set*" method for
-
-:return: (object) Proxy method
-:since:  v0.2.00
-        """
-
-        def proxymethod(self, value):
-            """
-Sets the value of the corresponding attribute.
-
-:param value: Attribute value
-
-:since: v0.2.00
-            """
-
-            attribute = { key: value }
-            self.set_data_attributes(**attribute)
-        #
-
-        return proxymethod
     #
 #
