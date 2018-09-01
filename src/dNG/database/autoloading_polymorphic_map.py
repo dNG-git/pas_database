@@ -21,7 +21,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from sqlalchemy.orm.mapper import configure_mappers
 
-from dNG.module.named_loader import NamedLoader
+from dNG.runtime.named_loader import NamedLoader
 
 class AutoloadingPolymorphicMap(dict):
     """

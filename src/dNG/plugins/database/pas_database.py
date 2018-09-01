@@ -20,8 +20,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 # pylint: disable=import-error, no-name-in-module, unused-argument
 
 from dNG.database.schema import Schema
-from dNG.module.named_loader import NamedLoader
 from dNG.plugins.hook import Hook
+from dNG.runtime.named_loader import NamedLoader
 
 def after_apply_schema(params, last_return = None):
     """
