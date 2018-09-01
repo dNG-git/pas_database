@@ -5,7 +5,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-https://www.direct-netware.de/redirect?pas;database
+https://www.direct-netware.de/redirect?pas;core
 
 This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can
@@ -16,55 +16,64 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 setup.py
 """
 
+from os import makedirs, path
+
+from distutils.core import setup
+
+try:
+    from dNG.distutils.command.build_py import BuildPy
+    from dNG.distutils.command.install_data import InstallData
+    from dNG.distutils.command.sdist import Sdist
+    from dNG.distutils.temporary_directory import TemporaryDirectory
+except ImportError:
+    raise RuntimeError("'dng-builder-suite' prerequisite not matched")
+#
+
 def get_version():
     """
 Returns the version currently in development.
 
 :return: (str) Version string
-:since:  v0.1.02
+:since:  v0.1.2
     """
 
-    return "v0.2.00"
+    return "v1.0.0"
 #
 
-from dNG.distutils.command.build_py import BuildPy
-from dNG.distutils.command.install_data import InstallData
-from dNG.distutils.temporary_directory import TemporaryDirectory
-
-from distutils.core import setup
-from os import path
-
 with TemporaryDirectory(dir = ".") as build_directory:
-    parameters = { "install_data_plain_copy_extensions": "json,sql",
-                   "pasDatabaseVersion": get_version()
-                 }
+    parameters = { "pasDatabaseVersion": get_version(), "plain_copy_extensions": "json,sql" }
+
+    BuildPy.set_build_target_path(build_directory)
+    BuildPy.set_build_target_parameters(parameters)
 
     InstallData.add_install_data_callback(InstallData.plain_copy, [ "data" ])
     InstallData.set_build_target_path(build_directory)
     InstallData.set_build_target_parameters(parameters)
 
-    _build_path = path.join(build_directory, "src")
+    Sdist.set_build_target_path(build_directory)
+    Sdist.set_build_target_parameters(parameters)
 
-    setup(name = "pas_database",
-          version = get_version(),
-          description = "Python Application Services",
-          long_description = """"pas_database" is an adapter and abstraction layer for SQLAlchemy.""",
-          author = "direct Netware Group et al.",
-          author_email = "web@direct-netware.de",
-          license = "MPL2",
-          url = "https://www.direct-netware.de/redirect?pas;database",
+    makedirs(path.join(build_directory, "src", "dNG"))
 
-          platforms = [ "any" ],
+    _setup = { "name": "pas-database",
+               "version": get_version(),
+               "description": "Python Application Services",
+               "long_description": """"pas_database" is an adapter and abstraction layer for SQLAlchemy.""",
+               "author": "direct Netware Group et al.",
+               "author_email": "web@direct-netware.de",
+               "license": "MPL2",
+               "url": "https://www.direct-netware.de/redirect?pas;database",
 
-          package_dir = { "": _build_path },
-          packages = [ "dNG" ],
+               "platforms": [ "any" ],
 
-          data_files = [ ( "docs", [ "LICENSE", "README" ]) ],
-          scripts = [ path.join(_build_path, "pas_db_tool.py") ],
+               "packages": [ "dNG" ],
 
-          # Override build_py to first run builder.py over all PAS modules
-          cmdclass = { "build_py": BuildPy,
-                       "install_data": InstallData
-                     }
-         )
+               "data_files": [ ( "docs", [ "LICENSE", "README" ]) ],
+               "scripts": [ path.join("src", "pas_db_tool.py") ]
+             }
+
+    # Override build_py to first run builder.py
+    _setup['cmdclass'] = { "build_py": BuildPy, "install_data": InstallData, "sdist": Sdist }
+
+    setup(**_setup)
 #
