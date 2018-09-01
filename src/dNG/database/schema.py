@@ -76,26 +76,18 @@ Constructor __init__(Schema)
         Instance.__init__(self, db_instance)
     #
 
-    get_version = Instance._wrap_getter("version")
-    """
-Returns the version for this schema entry.
-
-:return: (int) Version
-:since:  v0.2.00
-    """
-
-    def set_data_attributes(self, **kwargs):
+    def _set_data_attribute(self, attribute, value):
         """
-Sets values given as keyword arguments to this method.
+Sets data for the requested attribute.
 
-:since: v0.2.00
+:param attribute: Requested attribute
+:param value: Value for the requested attribute
+
+:since: v1.0.0
         """
 
-        with self:
-            if ("name" in kwargs): self.local.db_instance.name = Binary.utf8(kwargs['name'])
-            if ("version" in kwargs): self.local.db_instance.version = kwargs['version']
-            if ("applied" in kwargs): self.local.db_instance.applied = kwargs['applied']
-        #
+        if (attribute == "name"): value = Binary.utf8(value)
+        Instance._set_data_attribute(self, attribute, value)
     #
 
     @staticmethod
@@ -139,7 +131,7 @@ class.
 
             try:
                 schema_version = Schema.load_latest_name_entry(instance_class_name)
-                current_version = schema_version.get_version()
+                current_version = schema_version['version']
             except NothingMatchedException: current_version = 0
 
             if (current_version < 1):
@@ -232,7 +224,7 @@ Checks that all dependencies are matched.
             if ("name" in dependency and "version_required" in dependency):
                 try:
                     schema_version = Schema.load_latest_name_entry(dependency['name'])
-                    current_version = schema_version.get_version()
+                    current_version = schema_version['version']
                 except NothingMatchedException: current_version = 0
 
                 if (current_version < dependency['version_required']):
@@ -300,7 +292,7 @@ Upgrades the given database schema.
 
                             schema_raw_data = schema_data_file.read()
 
-                            schema_data = JsonResource().json_to_data(schema_raw_data)
+                            schema_data = JsonResource.json_to_data(schema_raw_data)
 
                             if (schema_data is None):
                                 raise IOException("'{0}' is not a valid JSON encoded file".format(schema_data_path_file_name))
