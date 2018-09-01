@@ -46,7 +46,7 @@ Database based encoded key-value store.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -62,7 +62,7 @@ SQLAlchemy database instance class to initialize for new instances.
         """
 Constructor __init__(KeyStore)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         Instance.__init__(self, db_instance)
@@ -142,7 +142,7 @@ Sets the values given as a dict as the value of this KeyStore instance.
         """
 Implementation of the reloading SQLAlchemy database instance logic.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (self.local.db_instance is None):
@@ -177,7 +177,7 @@ Load KeyStore entry from database.
 :param db_instance: SQLAlchemy database instance
 
 :return: (object) KeyStore instance on success
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = None
@@ -213,7 +213,7 @@ Load KeyStore value by ID.
 :param _id: KeyStore ID
 
 :return: (object) KeyStore instance on success
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         if (_id is None): raise NothingMatchedException("KeyStore ID is invalid")
@@ -233,7 +233,7 @@ Load KeyStore value by key.
 :param key: KeyStore key
 
 :return: (object) KeyStore instance on success
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         if (key is None): raise NothingMatchedException("KeyStore key is invalid")

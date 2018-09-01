@@ -38,7 +38,7 @@ Tool to work with the configured database and its tables.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -51,7 +51,7 @@ Constructor __init__(DbTool)
 
 :param args: Parsed command line arguments
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         InteractiveCli.__init__(self)
@@ -101,7 +101,7 @@ Sets the LogHandler.
         """
 Callback for execution.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         # pylint: disable=attribute-defined-outside-init
@@ -127,7 +127,7 @@ Callback for execution.
         """
 Callback for shutdown.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         Hook.free()
@@ -137,7 +137,7 @@ Callback for shutdown.
         """
 Callback for execution.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.output_info("Loading database entities ...")

@@ -31,7 +31,7 @@ Called for "dNG.pas.Database.applySchema.after"
 :param last_return: The return value from the last hook called.
 
 :return: (mixed) Return value
-:since:  v0.2.00
+:since:  v1.0.0
     """
 
     key_store_class = NamedLoader.get_class("dNG.database.instances.KeyStore")
@@ -51,7 +51,7 @@ Load and register all SQLAlchemy objects to generate database tables.
 :param last_return: The return value from the last hook called.
 
 :return: (mixed) Return value
-:since:  v0.2.00
+:since:  v1.0.0
     """
 
     NamedLoader.get_class("dNG.database.instances.KeyStore")
@@ -64,7 +64,7 @@ def register_plugin():
     """
 Register plugin hooks.
 
-:since: v0.2.00
+:since: v1.0.0
     """
 
     Hook.register("dNG.pas.Database.applySchema.after", after_apply_schema)
@@ -75,7 +75,7 @@ def unregister_plugin():
     """
 Unregister plugin hooks.
 
-:since: v0.2.00
+:since: v1.0.0
     """
 
     Hook.unregister("dNG.pas.Database.applySchema.after", after_apply_schema)

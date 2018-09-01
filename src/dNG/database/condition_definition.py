@@ -33,7 +33,7 @@ a SQLalchemy database query before execution.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -104,7 +104,7 @@ Condition contains a sub condition definition.
         """
 Constructor __init__(ConditionDefinition)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.concatenation = None
@@ -126,7 +126,7 @@ Adds a case insensitive condition to match the given value.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH,
@@ -142,7 +142,7 @@ Adds a case insensitive condition to not match the given value.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_NO_MATCH,
@@ -158,7 +158,7 @@ Adds a case sensitive condition to match the given value.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH,
@@ -174,7 +174,7 @@ Adds a case sensitive condition to not match the given value.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_NO_MATCH,
@@ -190,7 +190,7 @@ Adds a condition to match the given value exactly.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_MATCH,
@@ -206,7 +206,7 @@ Adds a condition to not match the given value exactly.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_NO_MATCH,
@@ -222,7 +222,7 @@ Adds a condition to match values greater than the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_MATCH,
@@ -238,7 +238,7 @@ Adds a condition to match values greater than or equal the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH,
@@ -254,7 +254,7 @@ Adds a condition to match a value exactly in the list given.
 :param attribute: Database entity attribute
 :param value: List of condition values
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (isinstance(value, list) and len(value) > 0):
@@ -272,7 +272,7 @@ Adds a condition to match values less than the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_MATCH,
@@ -288,7 +288,7 @@ Adds a condition to match values less than or equal the given one.
 :param attribute: Database entity attribute
 :param value: Condition value
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH,
@@ -304,7 +304,7 @@ Adds a condition to match a value exactly in the list given.
 :param attribute: Database entity attribute
 :param value: List of condition values
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (isinstance(value, list) and len(value) > 0):
@@ -321,7 +321,7 @@ Adds the given condition definition as a sub condition.
 
 :param condition_definition: ConditionDefinition instance
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (not isinstance(condition_definition, ConditionDefinition)): raise TypeException("Given condition definition type is invalid")
@@ -341,7 +341,7 @@ Applies the conditions to the given SQLAlchemy query instance.
 :param query: SQLAlchemy query instance
 
 :return: (object) Modified SQLAlchemy query instance
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         conditions = self._get_conditions(db_column_definition)
@@ -356,7 +356,7 @@ Applies the conditions to the given SQLAlchemy query instance.
         """
 Clears the current condition list.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.conditions = [ ]
@@ -367,7 +367,7 @@ Clears the current condition list.
 Returns the concatenation used for this condition definition.
 
 :retrun: (int) Concatenation type
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return self.concatenation
@@ -381,7 +381,7 @@ Returns a SQLalchemy condition.
 :param condition: Condition
 
 :return: (object) SQLalchemy condition; None if unknown type or empty
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         # pylint: disable=protected-access
@@ -431,7 +431,7 @@ instance.
 :param db_column_definition: Database class or column definition
 
 :return: (object) SQLalchemy condition clause; None if empty
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = None
@@ -461,7 +461,7 @@ instance.
 Returns the number of defined conditions.
 
 :return: (int) Conditions count
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return len(self.conditions)
@@ -473,7 +473,7 @@ Sets the concatenation used for this condition definition.
 
 :param concatenation: Concatenation
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (concatenation not in ( ConditionDefinition.AND, ConditionDefinition.OR )): raise ValueException("Given condition concatenation is invalid")
@@ -489,7 +489,7 @@ Returns a column from the given definition.
 :param name: Column name
 
 :return: (object) Database instance column; None if not defined
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return (db_column_definition.get_db_column(name)

@@ -32,7 +32,7 @@ after loading SQLAlchemy instances by "dNG.module.NamedLoader".
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -46,7 +46,7 @@ argument.
 :param key: Polymorphic name we want to load
 
 :return: (object) Polymorphic instance if found
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         common_name = "dNG.database.instances.{0}".format(key)

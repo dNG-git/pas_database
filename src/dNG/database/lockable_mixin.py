@@ -27,7 +27,7 @@ class LockableMixin(object):
 :copyright:  direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """

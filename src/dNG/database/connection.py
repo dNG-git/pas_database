@@ -45,7 +45,7 @@ class Connection(object):
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -81,7 +81,7 @@ Cache weakref instance
         """
 Constructor __init__(Connection)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.local = None
@@ -110,7 +110,7 @@ happened.
         """
 Destructor __del__(Connection)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (self.local is not None
@@ -131,7 +131,7 @@ Destructor __del__(Connection)
         """
 python.org: Enter the runtime context related to this object.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._enter_context()
@@ -143,7 +143,7 @@ python.org: Enter the runtime context related to this object.
 python.org: Exit the runtime context related to this object.
 
 :return: (bool) True to suppress exceptions
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         self._exit_context(exc_type, exc_value, traceback)
@@ -159,7 +159,7 @@ class tree for self).
 :param name: Attribute name
 
 :return: (mixed) Session attribute
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         self._ensure_thread_local_session()
@@ -175,7 +175,7 @@ class tree for self).
         """
 sqlalchemy.org: Begin a transaction on this Session.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local_session()
@@ -194,7 +194,7 @@ sqlalchemy.org: Begin a transaction on this Session.
         """
 sqlalchemy.org: Flush pending changes and commit the current transaction.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local_session()
@@ -210,7 +210,7 @@ sqlalchemy.org: Flush pending changes and commit the current transaction.
 For thread safety some variables are defined per thread. This method makes
 sure that these variables are defined.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (self.local is None): self.local = local()
@@ -227,7 +227,7 @@ sure that these variables are defined.
 This method ensures that one connection instance is hold per thread until
 the last context is exited.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local()
@@ -253,7 +253,7 @@ the last context is exited.
         """
 Enters the connection context.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}._enter_context()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -290,7 +290,7 @@ backslash escape character.
 :param value: LIKE condition value
 
 :return: (str) Escaped condition value
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = value.replace("%", "\\%")
@@ -303,7 +303,7 @@ backslash escape character.
         """
 Exits the connection context.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (self._log_handler is not None): self._log_handler.debug("#echo(__FILEPATH__)# -{0!r}._exit_context()- (#echo(__LINE__)#)", self, context = "pas_database")
@@ -339,7 +339,7 @@ Exits the connection context.
         """
 Returns the active SQLAlchemy session.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local_session()
@@ -350,7 +350,7 @@ Returns the active SQLAlchemy session.
         """
 Returns the current transaction depth.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local()
@@ -363,7 +363,7 @@ Optimizes the given database table.
 
 :param table: SQLAlchemy table definition
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         pass
@@ -375,7 +375,7 @@ Optimizes the given database table randomly (1/10 of all calls).
 
 :param table: SQLAlchemy table definition
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (randrange(0, 10) < 1): self.optimize(table)
@@ -385,7 +385,7 @@ Optimizes the given database table randomly (1/10 of all calls).
         """
 sqlalchemy.org: Rollback the current transaction in progress.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self._ensure_thread_local_session()
@@ -406,7 +406,7 @@ sqlalchemy.org: Rollback the current transaction in progress.
         """
 Check and read settings if needed.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (not Connection._settings_initialized):
@@ -460,7 +460,7 @@ Check and read settings if needed.
 Returns the connection backend.
 
 :return: (str) Database backend
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         if (not Connection._settings_initialized): Connection._ensure_settings()
@@ -473,7 +473,7 @@ Returns the connection backend.
 Get the Connection singleton.
 
 :return: (Connection) Object on success
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = None
@@ -496,7 +496,7 @@ Get the Connection singleton.
 Get the configured database table prefix.
 
 :return: (str) Table prefix
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         if (not Connection._settings_initialized): Connection._ensure_settings()
@@ -509,7 +509,7 @@ Get the configured database table prefix.
 Returns true if access to a database instance is serialized.
 
 :return: (bool) True for serialized access
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         if (not Connection._settings_initialized): Connection._ensure_settings()
@@ -524,7 +524,7 @@ Wraps a callable to be executed with an established database connection.
 :param _callable: Wrapped code
 
 :return: (object) Proxy method
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         def proxymethod(*args, **kwargs):

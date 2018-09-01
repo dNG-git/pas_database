@@ -33,7 +33,7 @@ This class provides abstract SQLAlchemy database instances.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -61,7 +61,7 @@ sqlalchemy.org: Designates a method as the "reconstructor", an __init__-like
 method that will be called by the ORM after the instance has been loaded
 from the database or otherwise reconstituted.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.__init__()
@@ -76,7 +76,7 @@ Returns the SQLAlchemy column for the requested attribute.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return cls._get_db_column(cls, attribute)
@@ -92,7 +92,7 @@ class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return (getattr(cls, attribute)
@@ -111,7 +111,7 @@ this entity class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return cls._get_unknown_db_column(cls, attribute)
@@ -127,7 +127,7 @@ the given entity class.
 :param attribute: Requested attribute
 
 :return: (object) SQLAlchemy column
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         raise ValueException("Given attribute '{0}' is not defined for '{1}".format(attribute, cls.__name__))
@@ -139,7 +139,7 @@ the given entity class.
 Get the configured database table prefix.
 
 :return: (str) Table prefix
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return Connection.get_table_prefix()

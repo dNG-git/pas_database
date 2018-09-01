@@ -48,7 +48,7 @@ The "Schema" class provides methods to handle versions and upgrades.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -70,7 +70,7 @@ Comments in (invalid) JSON setting files are replaced before getting parsed.
         """
 Constructor __init__(Schema)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         Instance.__init__(self, db_instance)
@@ -98,7 +98,7 @@ class.
 
 :param instance_class: Database instance class
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         # pylint: disable=broad-except
@@ -153,7 +153,7 @@ Applies the given SQL command to the database connection.
 
 :param sql_command: Database specific SQL command
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         Connection.get_instance().get_bind().execute(sql_command)
@@ -166,7 +166,7 @@ Applies the given SQL file.
 
 :param file_path_name: Database specific SQL file
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         file_content = None
@@ -215,7 +215,7 @@ Checks that all dependencies are matched.
 :param dependencies: List of dependencies to be checked
 
 :return: (bool) True if all dependencies are matched
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = True
@@ -246,7 +246,7 @@ Load the schema entry with the highest version for the given name.
 :param name: Schema name
 
 :return: (object) Schema instance on success
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         with Connection.get_instance():
@@ -272,7 +272,7 @@ Upgrades the given database schema.
 :param current_version: Current version of the SQLAlchemy database instance
 :param target_version: Target version of the SQLAlchemy database instance
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         LogLine.info("pas.Database will upgrade schema '{0}' from version {1:d} to {2:d}".format(instance_class_name, current_version, target_version))

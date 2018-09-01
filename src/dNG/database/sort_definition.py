@@ -31,7 +31,7 @@ instructions.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -49,7 +49,7 @@ Descending sort direction
         """
 Constructor __init__(SortDefinition)
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.sort_tuples = [ ]
@@ -75,7 +75,7 @@ Applies the sort order to the given SQLAlchemy query instance.
 :param query: SQLAlchemy query instance
 
 :return: (object) Modified SQLAlchemy query instance
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         _return = query
@@ -105,7 +105,7 @@ Appends a sort definition to the current list.
 :param direction: Sort direction
 
 :return: (object) SortDefinition instance
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         SortDefinition.validate_sort_direction(direction)
@@ -118,7 +118,7 @@ Appends a sort definition to the current list.
         """
 Clears the current list.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.sort_tuples = [ ]
@@ -132,7 +132,7 @@ Prepends a sort definition to the current list.
 :param direction: Sort direction
 
 :return: (object) SortDefinition instance
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         SortDefinition.validate_sort_direction(direction)
@@ -146,7 +146,7 @@ Prepends a sort definition to the current list.
         """
 Validates the given sort direction.
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         if (direction not in ( SortDefinition.ASCENDING, SortDefinition.DESCENDING )): raise ValueException("Sort definition given is not supported")

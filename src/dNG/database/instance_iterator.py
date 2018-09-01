@@ -33,7 +33,7 @@ SQLAlchemy database instances with an given class.
 :copyright:  (C) direct Netware Group - All rights reserved
 :package:    pas
 :subpackage: database
-:since:      v0.2.00
+:since:      v1.0.0
 :license:    https://www.direct-netware.de/redirect?licenses;mpl2
              Mozilla Public License, v. 2.0
     """
@@ -47,7 +47,7 @@ Constructor __init__(InstanceIterator)
 :param buffered: True to buffer the result
 :param instance_class: Encapsulating database instance class
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.args = args
@@ -83,7 +83,7 @@ Results being interated
 python.org: Return an iterator object.
 
 :return: (object) Iterator object
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         return (iter(self.result) if (self.instance_class is None) else self)
@@ -94,7 +94,7 @@ python.org: Return an iterator object.
 python.org: Return the next item from the container.
 
 :return: (object) Result object
-:since:  v0.2.00
+:since:  v1.0.0
         """
 
         db_instance = None
@@ -119,7 +119,7 @@ Loads and initializes instances for the buffer.
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         _return = db_instance
@@ -151,7 +151,7 @@ Loads and initializes instances for the buffer.
 :param entity: SQLAlchemy database entity
 :param cursor: SQLAlchemy result cursor
 
-:since: v0.2.00
+:since: v1.0.0
         """
 
         self.result = [ ]
