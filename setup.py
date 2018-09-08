@@ -18,7 +18,11 @@ setup.py
 
 from os import makedirs, path
 
-from distutils.core import setup
+try:
+    from setuptools.core import setup
+except ImportError:
+    from distutils.core import setup
+#
 
 try:
     from dNG.distutils.command.build_py import BuildPy
