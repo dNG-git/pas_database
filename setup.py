@@ -60,7 +60,7 @@ with TemporaryDirectory(dir = ".") as build_directory:
     makedirs(path.join(build_directory, "src", "dNG"))
 
     _setup = { "name": "pas-database",
-               "version": get_version(),
+               "version": get_version()[1:],
                "description": "Python Application Services",
                "long_description": """"pas_database" is an adapter and abstraction layer for SQLAlchemy.""",
                "author": "direct Netware Group et al.",
