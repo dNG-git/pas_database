@@ -20,6 +20,7 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 # pylint: disable=import-error
 
 from dNG.data.crud.nothing_matched_exception import NothingMatchedException
+from dNG.database.connection import Connection
 from dNG.database.nothing_matched_exception import NothingMatchedException as _DbNothingMatchedException
 from dNG.database.transaction_context import TransactionContext
 
@@ -48,7 +49,8 @@ Catch certain exceptions and wrap them in CRUD defined ones.
     """
 
         def proxymethod(self, *args, **kwargs):
-            try: return _callable(self, *args, **kwargs)
+            try:
+                with Connection.get_instance(): return _callable(self, *args, **kwargs)
             except _DbNothingMatchedException as handled_exception: raise NothingMatchedException(_exception = handled_exception)
         #
 
