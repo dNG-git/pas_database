@@ -105,7 +105,7 @@ python.org: Called to implement deletion of self[key].
         """
 
         if (self.is_data_attribute_defined(key)): raise IOException("Database instance attributes can not be deleted")
-        object.__delitem__(self, key)
+        super(Instance, self).__delitem__(self, key)
     #
 
     def __enter__(self):
@@ -156,6 +156,7 @@ python.org: Return an iterator object.
         if (db_instance_class is None): raise IOException("Database instance attributes can not be accessed")
 
         for column in db_instance_class.__table__.columns: yield column.key
+        for key in self._computed_column_keys: yield key
     #
 
     def __len__(self):
@@ -207,6 +208,18 @@ python.org: Called to implement assignment to self[key].
         """
 
         with self: self._set_data_attribute(key, value)
+    #
+
+    @property
+    def _computed_column_keys(self):
+        """
+Returns a list of computed column keys.
+
+:return: (list) List of computed column keys
+:since:  v1.0.0
+        """
+
+        return [ ]
     #
 
     @property
