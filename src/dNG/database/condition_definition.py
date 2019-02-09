@@ -119,6 +119,18 @@ List of conditions
         self.set_concatenation(concatenation)
     #
 
+    @property
+    def conditions_count(self):
+        """
+Returns the number of defined conditions.
+
+:return: (int) Conditions count
+:since:  v1.0.0
+        """
+
+        return len(self.conditions)
+    #
+
     def add_case_insensitive_match_condition(self, attribute, value):
         """
 Adds a case insensitive condition to match the given value.
@@ -326,7 +338,7 @@ Adds the given condition definition as a sub condition.
 
         if (not isinstance(condition_definition, ConditionDefinition)): raise TypeException("Given condition definition type is invalid")
 
-        if (condition_definition.get_conditions_count() > 0):
+        if (condition_definition.conditions_count > 0):
             self.conditions.append({ "type": ConditionDefinition.TYPE_SUB_CONDITION,
                                      "condition_definition": condition_definition
                                    })
@@ -454,17 +466,6 @@ instance.
         #
 
         return _return
-    #
-
-    def get_conditions_count(self):
-        """
-Returns the number of defined conditions.
-
-:return: (int) Conditions count
-:since:  v1.0.0
-        """
-
-        return len(self.conditions)
     #
 
     def set_concatenation(self, concatenation):
