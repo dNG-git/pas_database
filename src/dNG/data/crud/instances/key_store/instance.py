@@ -39,6 +39,35 @@ CRUD entity instance for "KeyStore".
              Mozilla Public License, v. 2.0
     """
 
+    @Abstract.catch_and_wrap_matching_exception
+    @Abstract.restrict_to_access_control_validated_execution
+    @DatabaseMixin.wrap_transaction
+    def create(self, **kwargs):
+        """
+"create" operation for "key_store/instance"
+
+:return: (object) KeyStore instance created
+:since:  v1.0.0
+        """
+
+        is_access_control_supported = self.is_supported("access_control_validation")
+
+        if (kwargs['_select_id'] is not None): raise OperationNotSupportedException()
+
+        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.create", kwargs = kwargs)
+
+        key_store = KeyStore()
+
+        with key_store:
+            key_store.set_data_attributes(**Instance._get_filtered_kwargs(kwargs))
+            key_store.save()
+        #
+
+        return key_store
+    #
+
+    @Abstract.catch_and_wrap_matching_exception
+    @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap
     def get(self, **kwargs):
         """
@@ -71,31 +100,8 @@ CRUD entity instance for "KeyStore".
         return kwargs['_selected_value'].value_dict
     #
 
-    @DatabaseMixin.wrap_transaction
-    def insert(self, **kwargs):
-        """
-"insert" operation for "key_store/instance"
-
-:return: (object) KeyStore instance created
-:since:  v1.0.0
-        """
-
-        is_access_control_supported = self.is_supported("access_control_validation")
-
-        if (kwargs['_select_id'] is not None): raise OperationNotSupportedException()
-
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.insert", kwargs = kwargs)
-
-        key_store = KeyStore()
-
-        with key_store:
-            key_store.set_data_attributes(**Instance._get_filtered_kwargs(kwargs))
-            key_store.save()
-        #
-
-        return key_store
-    #
-
+    @Abstract.catch_and_wrap_matching_exception
+    @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap
     def select(self, **kwargs):
         """
@@ -108,6 +114,8 @@ Internal select operation for "key_store/instance/:id"
         return self.get(**kwargs)
     #
 
+    @Abstract.catch_and_wrap_matching_exception
+    @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap_transaction
     def update(self, **kwargs):
         """
@@ -133,6 +141,8 @@ Internal select operation for "key_store/instance/:id"
         return True
     #
 
+    @Abstract.catch_and_wrap_matching_exception
+    @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap_transaction
     def update_data(self, **kwargs):
         """
@@ -158,7 +168,6 @@ Internal select operation for "key_store/instance/:id"
     #
 
     @classmethod
-    @Abstract.catch_and_wrap_matching_exception
     def _get_filtered_kwargs(cls, kwargs):
         """
 Returns all kwargs after filtering keys and their values.
