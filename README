@@ -7,7 +7,7 @@ The Python Application Services of the direct Netware Group contain
 different modules. Each represents one aspect, feature or provides the base
 functionality for other modules.
 
-"pas_database" is an adapter and abstraction layer for SQLAlchemy.
+"pas-database" is an adapter and abstraction layer for SQLAlchemy.
 
 ----------------------------------------------------------------------------
 Licensing

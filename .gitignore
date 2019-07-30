@@ -1,10 +1,12 @@
 __py*
 .*
+*.egg-info
 *.pyc
 nbproject
 /_extras
 /build
 /dist
-/make*.py*
+/makefile.*
 /MANIFEST
 /pas_database*
+/pas-database*

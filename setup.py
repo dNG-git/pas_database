@@ -5,7 +5,7 @@ direct PAS
 Python Application Services
 ----------------------------------------------------------------------------
 (C) direct Netware Group - All rights reserved
-https://www.direct-netware.de/redirect?pas;core
+https://www.direct-netware.de/redirect?pas;database
 
 This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can
@@ -19,18 +19,18 @@ setup.py
 from os import makedirs, path
 
 try:
-    from setuptools.core import setup
+    from setuptools import setup
 except ImportError:
-    from distutils.core import setup
+    from distutils import setup
 #
 
 try:
-    from dNG.distutils.command.build_py import BuildPy
-    from dNG.distutils.command.install_data import InstallData
-    from dNG.distutils.command.sdist import Sdist
-    from dNG.distutils.temporary_directory import TemporaryDirectory
+    from dpt_builder_suite.distutils.build_py import BuildPy
+    from dpt_builder_suite.distutils.install_data import InstallData
+    from dpt_builder_suite.distutils.sdist import Sdist
+    from dpt_builder_suite.distutils.temporary_directory import TemporaryDirectory
 except ImportError:
-    raise RuntimeError("'dng-builder-suite' prerequisite not matched")
+    raise RuntimeError("'dpt-builder-suite' prerequisite not matched")
 #
 
 def get_version():
@@ -57,23 +57,15 @@ with TemporaryDirectory(dir = ".") as build_directory:
     Sdist.set_build_target_path(build_directory)
     Sdist.set_build_target_parameters(parameters)
 
-    makedirs(path.join(build_directory, "src", "dNG"))
+    package_dir = path.join(build_directory, "src")
+    makedirs(package_dir)
 
-    _setup = { "name": "pas-database",
-               "version": get_version()[1:],
-               "description": "Python Application Services",
-               "long_description": """"pas_database" is an adapter and abstraction layer for SQLAlchemy.""",
-               "author": "direct Netware Group et al.",
-               "author_email": "web@direct-netware.de",
-               "license": "MPL2",
-               "url": "https://www.direct-netware.de/redirect?pas;database",
-
-               "platforms": [ "any" ],
-
-               "packages": [ "dNG" ],
-
+    _setup = { "version": get_version()[1:],
+               "package_dir": { "": package_dir },
+               "packages": [ "pas_database" ],
                "data_files": [ ( "docs", [ "LICENSE", "README" ]) ],
-               "scripts": [ path.join("src", "pas_db_tool.py") ]
+               "entry_points": { "console_scripts": [ "pas-database-tool = pas_database.__main__:main" ] },
+               "test_suite": "tests"
              }
 
     # Override build_py to first run builder.py

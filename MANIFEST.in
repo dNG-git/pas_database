@@ -1,1 +1,4 @@
 include README requirements.txt
+
+recursive-include data *
+recursive-include tests *

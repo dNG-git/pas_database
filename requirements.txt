@@ -1,4 +1,14 @@
 SQLAlchemy>=0.8
--e git+http://git.direct-netware.de/pas/crud_engine/#egg=pas-crud-engine
--e git+http://git.direct-netware.de/pas/interactive_cli/#egg=pas-interactive-cli
--e git+http://git.direct-netware.de/pas/plugins/#egg=pas-plugins
+
+git+https://git.direct-netware.de/pas/crud_engine/@v1.0.0#egg=pas-crud-engine
+
+git+https://git.direct-netware.de/dpt/builder_suite/@v1.0.0#egg=dpt-builder-suite
+git+https://git.direct-netware.de/dpt/file/@v1.0.0#egg=dpt-file
+git+https://git.direct-netware.de/dpt/interactive_cli/@v1.0.0#egg=dpt-interactive-cli
+git+https://git.direct-netware.de/dpt/json/@v1.0.0#egg=dpt-json
+git+https://git.direct-netware.de/dpt/logging/@v1.0.0#egg=dpt-logging
+git+https://git.direct-netware.de/dpt/module_loader/@v1.0.0#egg=dpt-module-loader
+git+https://git.direct-netware.de/dpt/plugins/@v1.0.0#egg=dpt-plugins
+git+https://git.direct-netware.de/dpt/runtime/@v1.0.0#egg=dpt-runtime
+git+https://git.direct-netware.de/dpt/settings/@v1.0.0#egg=dpt-settings
+git+https://git.direct-netware.de/dpt/threading/@v1.0.0#egg=dpt-threading
