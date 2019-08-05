@@ -106,41 +106,47 @@ class.
             or instance_class.db_schema_version is None
            ): raise TypeException("Given instance class is invalid")
 
+        current_version = 0
         instance_class_name = instance_class.__name__
 
-        with Connection.get_instance(), HookContext("pas.Database.{0}.applySchema".format(instance_class_name)):
-            schema_directory_path = path.join(Settings.get("path_data"),
-                                              "database",
-                                              "{0}_schema".format(Connection.get_backend_name()),
-                                              instance_class_name
-                                             )
-
-            schema_version_files = { }
-
-            if (os.access(schema_directory_path, os.R_OK | os.X_OK)):
-                re_object = re.compile("schema\\_\\d+\\.(json|sql)$", re.I)
-
-                schema_version_files = { file_name: path.join(schema_directory_path, file_name)
-                                         for file_name in os.listdir(schema_directory_path) if (re_object.match(file_name) is not None)
-                                       }
-            #
-
-            target_version = instance_class.db_schema_version
-
+        with Connection.get_instance():
             try:
                 schema_version = Schema.load_latest_name_entry(instance_class_name)
                 current_version = schema_version['version']
-            except NothingMatchedException: current_version = 0
+            except NothingMatchedException: pass
 
-            if (current_version < 1):
-                LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, target_version))
+            target_version = instance_class.db_schema_version
 
-                schema = Schema()
-                schema.set_data_attributes(name = instance_class_name, version = target_version)
-                schema.save()
-            elif (len(schema_version_files) > 0
-                  and current_version < target_version
-                 ): Schema._upgrade(instance_class_name, schema_version_files, current_version, target_version)
+            with HookContext("pas.database.{0}.applySchema".format(instance_class_name),
+                             current_version = current_version,
+                             target_version = target_version
+                            ):
+                schema_directory_path = path.join(Settings.get("path_data"),
+                                                "database",
+                                                "{0}_schema".format(Connection.get_backend_name()),
+                                                instance_class_name
+                                                )
+
+                schema_version_files = { }
+
+                if (os.access(schema_directory_path, os.R_OK | os.X_OK)):
+                    re_object = re.compile("schema\\_\\d+\\.(json|sql)$", re.I)
+
+                    schema_version_files = { file_name: path.join(schema_directory_path, file_name)
+                                            for file_name in os.listdir(schema_directory_path) if (re_object.match(file_name) is not None)
+                                        }
+                #
+
+                if (current_version < 1):
+                    LogLine.info("pas.Database schema '{0}' is at version {1:d}".format(instance_class_name, target_version))
+
+                    schema = Schema()
+                    schema.set_data_attributes(name = instance_class_name, version = target_version)
+                    schema.save()
+                elif (len(schema_version_files) > 0
+                    and current_version < target_version
+                    ): Schema._upgrade(instance_class_name, schema_version_files, current_version, target_version)
+            #
         #
     #
 
