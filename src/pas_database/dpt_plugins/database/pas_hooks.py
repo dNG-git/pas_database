@@ -21,7 +21,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from dpt_module_loader import NamedClassLoader
 from dpt_plugins import Hook
-from dpt_runtime.type_exception import TypeException
 
 from ...orm import Abstract
 from ...schema import Schema
@@ -37,12 +36,10 @@ Called for "pas.Database.applySchema.after"
 :since:  v1.0.0
     """
 
-    key_store_class = NamedClassLoader.get_class_in_namespace("orm", "KeyStore")
-    if (not issubclass(key_store_class, Abstract)): raise TypeException("pas.database ORM class '{0!r}' loaded is invalid".format(key_store_class))
+    key_store_class = NamedClassLoader.get_class("pas_database.orm.KeyStore")
     Schema.apply_version(key_store_class)
 
-    schema_version_class = NamedClassLoader.get_class_in_namespace("orm", "SchemaVersion")
-    if (not issubclass(schema_version_class, Abstract)): raise TypeException("pas.database ORM class '{0!r}' loaded is invalid".format(schema_version_class))
+    schema_version_class = NamedClassLoader.get_class("pas_database.orm.SchemaVersion")
     Schema.apply_version(schema_version_class)
 
     return last_return
@@ -59,8 +56,8 @@ Load and register all SQLAlchemy objects to generate database tables.
 :since:  v1.0.0
     """
 
-    NamedClassLoader.get_class_in_namespace("orm", "KeyStore")
-    NamedClassLoader.get_class_in_namespace("orm", "SchemaVersion")
+    NamedClassLoader.get_class("pas_database.orm.KeyStore")
+    NamedClassLoader.get_class("pas_database.orm.SchemaVersion")
 
     return last_return
 #
