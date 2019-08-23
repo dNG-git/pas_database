@@ -19,8 +19,8 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 # pylint: disable=abstract-method
 
-from datetime import datetime
-from time import mktime
+from calendar import timegm
+from datetime import datetime, timezone
 
 from sqlalchemy.types import DateTime as _DateTime
 from sqlalchemy.types import TypeDecorator
@@ -64,7 +64,7 @@ sqlalchemy.org: Receive a bound parameter value to be converted.
 :since:  v1.0.0
         """
 
-        return (None if (value is None) else datetime.fromtimestamp(value))
+        return (None if (value is None) else datetime.utcfromtimestamp(value))
     #
 
     def process_result_value(self, value, dialect):
@@ -85,9 +85,9 @@ sqlalchemy.org: Receive a result-row column value to be converted.
         _return = None
 
         if (value is not None):
-            _return = (value.timestamp()
+            _return = (value.replace(tzinfo = timezone.utc).timestamp()
                        if (hasattr(value, "timestamp")) else
-                       mktime(value.timetuple())
+                       timegm(value.timetuple())
                       )
         #
 
