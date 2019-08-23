@@ -38,6 +38,7 @@ from dpt_threading.thread_lock import ThreadLock
 
 from sqlalchemy.engine import engine_from_config
 from sqlalchemy.orm.session import Session
+from sqlalchemy.pool import NullPool
 
 class Connection(object):
     """
@@ -100,7 +101,10 @@ happened.
             with Connection._instance_lock:
                 # Thread safety
                 if (Connection._sa_engine is None):
-                    Connection._sa_engine = engine_from_config(Settings.get_dict(),
+                    connection_settings = Settings.get_dict()
+                    if (Connection._serialized): connection_settings['pas_database_sqlalchemy_poolclass'] = NullPool
+
+                    Connection._sa_engine = engine_from_config(connection_settings,
                                                                prefix = "pas_database_sqlalchemy_"
                                                               )
                 #
@@ -331,9 +335,7 @@ Exits the connection context.
             #
         #
         finally:
-            if (Connection.is_serialized() and
-                self.local.context_depth < 1
-               ): Connection._serialized_lock.release()
+            if (Connection.is_serialized() and self.local.context_depth < 1): Connection._serialized_lock.release()
         #
     #
 
