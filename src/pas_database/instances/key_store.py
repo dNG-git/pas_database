@@ -72,6 +72,10 @@ Constructor __init__(KeyStore)
         """
 Database ID used for reloading
         """
+        self._values = None
+        """
+Instance cached values
+        """
     #
 
     @property
@@ -114,15 +118,18 @@ Returns the values originally given as a dict to this KeyStore instance.
 :since:  v1.0.0
         """
 
-        with self:
-            _return = ({ }
-                       if (self.local.db_instance.value is None) else
-                       JsonResource.json_to_data(self.local.db_instance.value)
-                      )
+        if (self._values is None):
+            with self:
+                self._values = ({ }
+                                if (self.local.db_instance.value is None) else
+                                JsonResource.json_to_data(self.local.db_instance.value)
+                               )
+            #
+
+            if (self._values is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
         #
 
-        if (_return is None): raise ValueException("Value of the KeyStore does not contain the expected data format")
-        return _return
+        return self._values
     #
 
     @value_dict.setter
@@ -135,8 +142,8 @@ Sets the values given as a dict as the value of this KeyStore instance.
 :since: v1.0.0
         """
 
-        if (not isinstance(data, dict)): raise TypeException("Invalid data type given")
-        with self: self._set_data_attribute("value", JsonResource().data_to_json(data))
+        if (not isinstance(data, Mapping)): raise TypeException("Invalid data type given")
+        self._values = (data if (type(data) is dict) else dict(data))
     #
 
     def _reload(self):
@@ -152,6 +159,22 @@ Implementation of the reloading SQLAlchemy database instance logic.
         else: Instance._reload(self)
     #
 
+    def save(self):
+        """
+Saves changes of the database task instance.
+
+:since: v1.0.0
+        """
+
+        with self, self.local.connection.no_autoflush:
+            if (self._values is not None):
+                self.local.db_instance.value = Binary.utf8(JsonResource().data_to_json(self._values))
+            #
+
+            Instance.save(self)
+        #
+    #
+
     def _set_data_attribute(self, attribute, value):
         """
 Sets data for the requested attribute.
@@ -162,9 +185,10 @@ Sets data for the requested attribute.
 :since: v1.0.0
         """
 
-        if (attribute == "value" and isinstance(value, Mapping)): self.value_dict = value
+        if (attribute == "value"):
+            self.value_dict = (value if (isinstance(value, Mapping)) else JsonResource.json_to_data(value))
         else:
-            if (attribute in ( "key", "value" )): value = Binary.utf8(value)
+            if (attribute == "key"): value = Binary.utf8(value)
             Instance._set_data_attribute(self, attribute, value)
         #
     #
