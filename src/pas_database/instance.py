@@ -106,7 +106,7 @@ python.org: Called to implement deletion of self[key].
         """
 
         if (self.is_data_attribute_defined(key)): raise IOException("Database instance attributes can not be deleted")
-        super(Instance, self).__delitem__(self, key)
+        self._delete_unknown_data_attribute(key)
     #
 
     def __enter__(self):
@@ -168,7 +168,7 @@ python.org: Called to implement the built-in function len().
 :since: v1.0.0
         """
 
-        return len(Instance.get_db_class(self.__class__).__table__.columns)
+        return (len(Instance.get_db_class(self.__class__).__table__.columns) + len(self._computed_column_keys))
     #
 
     def __new__(cls, *args, **kwargs):
@@ -304,6 +304,21 @@ Deletes this entry from the database.
         #
 
         return _return
+    #
+
+    def _delete_unknown_data_attribute(self, attribute):
+        """
+Deletes data for the requested attribute not defined for this instance.
+
+:param attribute: Requested attribute
+
+:since: v1.0.0
+        """
+
+        raise (IOException("Database instance attributes can not be deleted")
+               if (attribute in self._computed_column_keys) else
+               KeyError(attribute)
+              )
     #
 
     def _ensure_attached_instance(self):
