@@ -51,20 +51,17 @@ CRUD entity instance for "KeyStore".
 :since:  v1.0.0
         """
 
-        is_access_control_supported = self.is_supported("access_control_validation")
-
         if (kwargs['_select_id'] is not None): raise OperationNotSupportedException()
 
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.create", kwargs = kwargs)
+        self.access_control.validate(self, "key_store.Instance.create", kwargs = kwargs)
+        _return = KeyStore()
 
-        key_store = KeyStore()
-
-        with key_store:
-            key_store.set_data_attributes(**Instance._get_filtered_kwargs(kwargs))
-            key_store.save()
+        with _return:
+            _return.set_data_attributes(**Instance._get_filtered_kwargs(kwargs))
+            _return.save()
         #
 
-        return key_store
+        return _return
     #
 
     @Abstract.catch_and_wrap_matching_exception
@@ -78,15 +75,13 @@ CRUD entity instance for "KeyStore".
 :since:  v1.0.0
         """
 
-        is_access_control_supported = self.is_supported("access_control_validation")
-
         if (kwargs['_select_id'] is None): raise OperationNotSupportedException()
 
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.get", _id = kwargs['_select_id'])
-        key_store = KeyStore.load_id(kwargs['_select_id'])
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.get", key_store = key_store)
+        self.access_control.validate(self, "key_store.Instance.get", _id = kwargs['_select_id'])
+        _return = KeyStore.load_id(kwargs['_select_id'])
+        self.access_control.validate(self, "key_store.Instance.get", key_store = _return)
 
-        return key_store
+        return _return
     #
 
     def get_data(self, **kwargs):
@@ -112,20 +107,15 @@ CRUD entity instance for "KeyStore".
 :since:  v1.0.0
         """
 
-        is_access_control_supported = self.is_supported("access_control_validation")
-
         if (kwargs['_select_id'] is None): raise OperationNotSupportedException()
 
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.get_key", _id = kwargs['_select_id'])
-        key_store = KeyStore.load_key(kwargs['_select_id'])
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.get_key", key_store = key_store)
+        self.access_control.validate(self, "key_store.Instance.get_key", _id = kwargs['_select_id'])
+        _return = KeyStore.load_key(kwargs['_select_id'])
+        self.access_control.validate(self, "key_store.Instance.get_key", key_store = _return)
 
-        return key_store
+        return _return
     #
 
-    @Abstract.catch_and_wrap_matching_exception
-    @Abstract.restrict_to_access_control_validated_execution
-    @DatabaseMixin.wrap
     def select(self, **kwargs):
         """
 Internal select operation for "key_store/instance/:id"
@@ -148,13 +138,11 @@ Internal select operation for "key_store/instance/:id"
 :since:  v1.0.0
         """
 
-        is_access_control_supported = self.is_supported("access_control_validation")
-
         if (kwargs['_select_id'] is None): raise OperationNotSupportedException()
 
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.update", _id = kwargs['_select_id'])
+        self.access_control.validate(self, "key_store.Instance.update", _id = kwargs['_select_id'])
         key_store = KeyStore.load_id(kwargs['_select_id'])
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.update", key_store = key_store)
+        self.access_control.validate(self, "key_store.Instance.update", key_store = key_store)
 
         with key_store:
             key_store.set_data_attributes(**Instance._get_filtered_kwargs(kwargs))
@@ -175,12 +163,10 @@ Internal select operation for "key_store/instance/:id"
 :since:  v1.0.0
         """
 
-        is_access_control_supported = self.is_supported("access_control_validation")
-
         if (not isinstance(kwargs['_selected_value'], KeyStore)): raise OperationNotSupportedException()
         key_store = kwargs['_selected_value']
 
-        if (is_access_control_supported): self.access_control.validate(self, "key_store.Instance.update", key_store = key_store)
+        self.access_control.validate(self, "key_store.Instance.update", key_store = key_store)
 
         with key_store:
             key_store.value_dict = Instance._get_filtered_kwargs(kwargs)
@@ -190,10 +176,12 @@ Internal select operation for "key_store/instance/:id"
         return True
     #
 
-    @classmethod
-    def _get_filtered_kwargs(cls, kwargs):
+    @staticmethod
+    def _get_filtered_kwargs(kwargs):
         """
 Returns all kwargs after filtering keys and their values.
+
+:param kwargs: Keyword arguments to filter
 
 :return: (dict) Filtered kwargs
 :since:  v1.0.0
