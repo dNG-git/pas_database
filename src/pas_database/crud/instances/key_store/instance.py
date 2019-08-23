@@ -155,21 +155,24 @@ Internal select operation for "key_store/instance/:id"
     @Abstract.catch_and_wrap_matching_exception
     @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap_transaction
-    def update_data(self, **kwargs):
+    def update_data(self, _select_id = None, _selected_value = None, **kwargs):
         """
 "update" operation for "key_store/instance/:id/data"
+
+:param _select_id: CRUD resource selection ID
+:param _selected_value: CRUD resource selected value
 
 :return: (bool) True on success
 :since:  v1.0.0
         """
 
-        if (not isinstance(kwargs['_selected_value'], KeyStore)): raise OperationNotSupportedException()
-        key_store = kwargs['_selected_value']
+        if (not isinstance(_selected_value, KeyStore)): raise OperationNotSupportedException()
+        key_store = _selected_value
 
         self.access_control.validate(self, "key_store.Instance.update", key_store = key_store)
 
         with key_store:
-            key_store.value_dict = Instance._get_filtered_kwargs(kwargs)
+            key_store.value_dict = kwargs
             key_store.save()
         #
 
