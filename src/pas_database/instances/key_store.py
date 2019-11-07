@@ -59,6 +59,12 @@ Database based encoded key-value store.
 SQLAlchemy database instance class to initialize for new instances.
     """
 
+    __slots__ = [ "_id", "_values" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self, db_instance = None):
         """
 Constructor __init__(KeyStore)
@@ -142,7 +148,7 @@ Sets the values given as a dict as the value of this KeyStore instance.
 :since: v1.0.0
         """
 
-        if (not isinstance(data, Mapping)): raise TypeException("Invalid data type given")
+        if (not isinstance(data, Mapping)): raise TypeException("Value data type given is invalid")
         self._values = (data if (type(data) is dict) else dict(data))
     #
 

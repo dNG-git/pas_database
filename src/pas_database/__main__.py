@@ -17,8 +17,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-# pylint: disable=import-error,no-name-in-module
-
 from argparse import ArgumentParser
 
 from dpt_interactive_cli import InteractiveCli
@@ -47,6 +45,12 @@ Tool to work with the configured database and its tables.
 
     # pylint: disable=unused-argument
 
+    __slots__ = [ "_cli_setup" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self):
         """
 Constructor __init__(Application)
@@ -58,7 +62,7 @@ Constructor __init__(Application)
 
         InteractiveCli.__init__(self)
 
-        self.cli_setup = False
+        self._cli_setup = False
         """
 True if this tool should handle the initial configuration.
         """
@@ -80,7 +84,7 @@ Returns true if this tool should handle the initial configuration.
 :since:  v1.0.0
         """
 
-        return self.cli_setup
+        return self._cli_setup
     #
 
     @InteractiveCli.log_handler.setter
@@ -118,7 +122,7 @@ Callback for execution.
             log_handler.debug("#echo(__FILEPATH__)# -{0!r}._on_run()- (#echo(__LINE__)#)", self, context = "pas_database")
         #
 
-        self.cli_setup = args.cli_setup
+        self._cli_setup = args.cli_setup
 
         Hook.load("database")
 

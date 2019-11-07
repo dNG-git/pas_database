@@ -17,8 +17,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-# pylint: disable=import-error, no-name-in-module, unused-argument
-
 from dpt_module_loader import NamedClassLoader
 from dpt_plugins import Hook
 

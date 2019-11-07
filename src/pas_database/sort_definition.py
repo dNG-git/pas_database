@@ -43,6 +43,12 @@ Ascending sort direction
 Descending sort direction
     """
 
+    __slots__ = [ "sort_tuples" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self, sort_tuples = None):
         """
 Constructor __init__(SortDefinition)

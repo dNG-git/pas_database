@@ -37,6 +37,12 @@ SQLAlchemy database instances with an given class.
              Mozilla Public License, v. 2.0
     """
 
+    __slots__ = [ "args", "buffered", "instance_class", "kwargs", "result" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self, entity, cursor, buffered = False, instance_class = None, *args, **kwargs):
         """
 Constructor __init__(InstanceIterator)

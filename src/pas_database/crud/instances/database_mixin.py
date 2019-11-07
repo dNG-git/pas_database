@@ -40,6 +40,16 @@ class DatabaseMixin(object):
              Mozilla Public License, v. 2.0
     """
 
+    _mixin_slots_ = [ ]
+    """
+Additional __slots__ used for inherited classes.
+    """
+    __slots__ = [ ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     @staticmethod
     def catch_and_wrap_matching_exception(_callable):
         """
@@ -74,13 +84,10 @@ Catch certain exceptions and wrap them in CRUD defined ones.
 
         @wraps(_callable)
         def proxymethod(self, *args, **kwargs):
-            try:
-                with Connection.get_instance(): return _callable(self, *args, **kwargs)
-            except _DbNothingMatchedException as handled_exception: raise NothingMatchedException(_exception = handled_exception)
-            except SQLAlchemyError as handled_exception: raise OperationFailedException(_exception = handled_exception)
+            with Connection.get_instance(): return _callable(self, *args, **kwargs)
         #
 
-        return proxymethod
+        return DatabaseMixin.catch_and_wrap_matching_exception(proxymethod)
     #
 
     @staticmethod
@@ -97,12 +104,9 @@ additionally applies a transaction context for the callable.
 
         @wraps(_callable)
         def proxymethod(self, *args, **kwargs):
-            try:
-                with TransactionContext(): return _callable(self, *args, **kwargs)
-            except _DbNothingMatchedException as handled_exception: raise NothingMatchedException(_exception = handled_exception)
-            except SQLAlchemyError as handled_exception: raise OperationFailedException(_exception = handled_exception)
+            with TransactionContext(): return _callable(self, *args, **kwargs)
         #
 
-        return proxymethod
+        return DatabaseMixin.catch_and_wrap_matching_exception(proxymethod)
     #
 #

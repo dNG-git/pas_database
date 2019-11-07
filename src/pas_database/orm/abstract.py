@@ -17,8 +17,6 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 #echo(__FILEPATH__)#
 """
 
-# pylint: disable=import-error,no-name-in-module
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import reconstructor
 
@@ -45,6 +43,11 @@ This class provides abstract SQLAlchemy database instances.
     """
 sqlalchemy.org: "__abstract__" causes declarative to skip the production
 of a table or mapper for the class entirely.
+    """
+    __slots__ = [ ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
     """
     db_instance_class = None
     """

@@ -60,6 +60,12 @@ instance.
 SQLAlchemy database instance class to initialize for new instances.
     """
 
+    __slots__ = [ "__weakref__", "_db_context_sort_definition", "_db_sort_definition", "local", "_lock", "_log_handler" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self, db_instance = None):
         """
 Constructor __init__(Instance)
@@ -709,7 +715,7 @@ database instances with an given class.
 :since:  v1.0.0
         """
 
-        if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
+        if (not isinstance(result, ResultProxy)): raise TypeException("Database result given is invalid")
         return InstanceIterator(entity, result, True, cls, *args, **kwargs)
     #
 
@@ -860,7 +866,7 @@ database instances with an given class.
 :since:  v1.0.0
         """
 
-        if (not isinstance(result, ResultProxy)): raise ValueException("Invalid database result given")
+        if (not isinstance(result, ResultProxy)): raise TypeException("Database result given is invalid")
         return InstanceIterator(entity, result, False, cls, *args, **kwargs)
     #
 #

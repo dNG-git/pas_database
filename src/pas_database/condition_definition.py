@@ -98,6 +98,12 @@ Matches if the property is not a exact match of a value in the list.
 Condition contains a sub condition definition.
     """
 
+    __slots__ = [ "_concatenation", "_conditions" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self, concatenation = OR):
         """
 Constructor __init__(ConditionDefinition)
@@ -109,7 +115,7 @@ Constructor __init__(ConditionDefinition)
         """
 Type of condition concatenation
         """
-        self.conditions = [ ]
+        self._conditions = [ ]
         """
 List of conditions
         """
@@ -144,6 +150,18 @@ Sets the concatenation used for this condition definition.
     #
 
     @property
+    def conditions(self):
+        """
+Returns the list of defined conditions.
+
+:return: (int) Conditions count
+:since:  v1.0.0
+        """
+
+        return self._conditions
+    #
+
+    @property
     def conditions_count(self):
         """
 Returns the number of defined conditions.
@@ -152,7 +170,7 @@ Returns the number of defined conditions.
 :since:  v1.0.0
         """
 
-        return len(self.conditions)
+        return len(self._conditions)
     #
 
     def add_case_insensitive_match_condition(self, attribute, value):
@@ -165,10 +183,10 @@ Adds a case insensitive condition to match the given value.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_case_insensitive_no_match_condition(self, attribute, value):
@@ -181,10 +199,10 @@ Adds a case insensitive condition to not match the given value.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_NO_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_CASE_INSENSITIVE_NO_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_case_sensitive_match_condition(self, attribute, value):
@@ -197,10 +215,10 @@ Adds a case sensitive condition to match the given value.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_case_sensitive_no_match_condition(self, attribute, value):
@@ -213,10 +231,10 @@ Adds a case sensitive condition to not match the given value.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_NO_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_CASE_SENSITIVE_NO_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_exact_match_condition(self, attribute, value):
@@ -229,10 +247,10 @@ Adds a condition to match the given value exactly.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_EXACT_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_exact_no_match_condition(self, attribute, value):
@@ -245,10 +263,10 @@ Adds a condition to not match the given value exactly.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_EXACT_NO_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_EXACT_NO_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_greater_than_match_condition(self, attribute, value):
@@ -261,10 +279,10 @@ Adds a condition to match values greater than the given one.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_greater_than_or_equal_match_condition(self, attribute, value):
@@ -277,10 +295,10 @@ Adds a condition to match values greater than or equal the given one.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_GREATER_THAN_OR_EQUAL_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_in_list_match_condition(self, attribute, value):
@@ -294,10 +312,10 @@ Adds a condition to match a value exactly in the list given.
         """
 
         if (isinstance(value, list) and len(value) > 0):
-            self.conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
-                                     "attribute": attribute,
-                                     "value": value
-                                   })
+            self._conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
+                                      "attribute": attribute,
+                                      "value": value
+                                    })
         #
     #
 
@@ -311,10 +329,10 @@ Adds a condition to match values less than the given one.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_less_than_or_equal_match_condition(self, attribute, value):
@@ -327,10 +345,10 @@ Adds a condition to match values less than or equal the given one.
 :since: v1.0.0
         """
 
-        self.conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH,
-                                 "attribute": attribute,
-                                 "value": value
-                               })
+        self._conditions.append({ "type": ConditionDefinition.TYPE_LESS_THAN_OR_EQUAL_MATCH,
+                                  "attribute": attribute,
+                                  "value": value
+                                })
     #
 
     def add_not_in_list_match_condition(self, attribute, value):
@@ -344,10 +362,10 @@ Adds a condition to match a value exactly in the list given.
         """
 
         if (isinstance(value, list) and len(value) > 0):
-            self.conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
-                                     "attribute": attribute,
-                                     "value": value
-                                   })
+            self._conditions.append({ "type": ConditionDefinition.TYPE_IN_LIST_MATCH,
+                                      "attribute": attribute,
+                                      "value": value
+                                    })
         #
     #
 
@@ -363,9 +381,9 @@ Adds the given condition definition as a sub condition.
         if (not isinstance(condition_definition, ConditionDefinition)): raise TypeException("Given condition definition type is invalid")
 
         if (condition_definition.conditions_count > 0):
-            self.conditions.append({ "type": ConditionDefinition.TYPE_SUB_CONDITION,
-                                     "condition_definition": condition_definition
-                                   })
+            self._conditions.append({ "type": ConditionDefinition.TYPE_SUB_CONDITION,
+                                      "condition_definition": condition_definition
+                                    })
         #
     #
 
@@ -395,7 +413,7 @@ Clears the current condition list.
 :since: v1.0.0
         """
 
-        self.conditions = [ ]
+        self._conditions = [ ]
     #
 
     def _get_condition(self, db_column_definition, condition):
@@ -463,7 +481,7 @@ instance.
 
         condition_clauses = [ ]
 
-        for condition in self.conditions:
+        for condition in self._conditions:
             condition_clause = self._get_condition(db_column_definition, condition)
             if (condition_clause is not None): condition_clauses.append(condition_clause)
         #

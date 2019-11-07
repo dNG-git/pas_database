@@ -64,15 +64,11 @@ RegExp to find escape characters
 Comments in (invalid) JSON setting files are replaced before getting parsed.
     """
 
-    def __init__(self, db_instance = None):
-        """
-Constructor __init__(Schema)
-
-:since: v1.0.0
-        """
-
-        Instance.__init__(self, db_instance)
-    #
+    __slots__ = [ ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
 
     def _set_data_attribute(self, attribute, value):
         """

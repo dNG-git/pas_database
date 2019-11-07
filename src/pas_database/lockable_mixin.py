@@ -34,6 +34,16 @@ class LockableMixin(object):
 
     # pylint: disable=protected-access
 
+    _mixin_slots_ = [ ]
+    """
+Additional __slots__ used for inherited classes.
+    """
+    __slots__ = [ ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     is_locked = Instance._data_attribute_readonly_property("locked")
     """
 Returns true if the entry is locked.

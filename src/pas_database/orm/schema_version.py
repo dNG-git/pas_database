@@ -41,6 +41,11 @@ Database table listing the current schema version.
 
     # pylint: disable=invalid-name
 
+    __slots__ = [ ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
     __tablename__ = "{0}_schema_version".format(Abstract.get_table_prefix())
     """
 SQLAlchemy table name

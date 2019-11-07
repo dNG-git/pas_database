@@ -38,6 +38,12 @@ transactions.
              Mozilla Public License, v. 2.0
     """
 
+    __slots__ = [ "__weakref__", "local" ]
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     def __init__(self):
         """
 Constructor __init__(TransactionContext)

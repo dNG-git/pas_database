@@ -40,6 +40,12 @@ CRUD entity instance for "KeyStore".
              Mozilla Public License, v. 2.0
     """
 
+    __slots__ = DatabaseMixin._mixin_slots_
+    """
+python.org: __slots__ reserves space for the declared variables and prevents
+the automatic creation of __dict__ and __weakref__ for each instance.
+    """
+
     @Abstract.catch_and_wrap_matching_exception
     @Abstract.restrict_to_access_control_validated_execution
     @DatabaseMixin.wrap_transaction
