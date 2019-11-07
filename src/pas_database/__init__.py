@@ -26,3 +26,4 @@ from .nothing_matched_exception import NothingMatchedException
 from .schema import Schema
 from .sort_definition import SortDefinition
 from .transaction_context import TransactionContext
+from .update_conflict_exception import UpdateConflictException

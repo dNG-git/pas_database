@@ -19,13 +19,14 @@ https://www.direct-netware.de/redirect?licenses;mpl2
 
 from functools import wraps
 
-from pas_crud_engine import NothingMatchedException, OperationFailedException
+from pas_crud_engine import NothingMatchedException, OperationFailedException, UpdateConflictException
 from pas_crud_engine.instances import Abstract
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...connection import Connection
 from ...nothing_matched_exception import NothingMatchedException as _DbNothingMatchedException
 from ...transaction_context import TransactionContext
+from ...update_conflict_exception import UpdateConflictException as _DbUpdateConflictException
 
 class DatabaseMixin(object):
     """
@@ -65,6 +66,7 @@ Catch certain exceptions and wrap them in CRUD defined ones.
         def proxymethod(self, *args, **kwargs):
             try: return _callable(self, *args, **kwargs)
             except _DbNothingMatchedException as handled_exception: raise NothingMatchedException(_exception = handled_exception)
+            except _DbUpdateConflictException as handled_exception: raise UpdateConflictException(_exception = handled_exception)
             except SQLAlchemyError as handled_exception: raise OperationFailedException(_exception = handled_exception)
         #
 
