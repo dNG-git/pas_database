@@ -32,6 +32,7 @@ from dpt_runtime.type_exception import TypeException
 from dpt_runtime.value_exception import ValueException
 from dpt_settings import Settings
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.expression import and_
 
 from ..connection import Connection
@@ -177,7 +178,11 @@ Saves changes of the database task instance.
                 self.local.db_instance.value = Binary.utf8(JsonResource().data_to_json(self._values))
             #
 
-            Instance.save(self)
+            try: Instance.save(self)
+            except IntegrityError:
+                KeyStore._db_cleanup()
+                Instance.save(self)
+            #
         #
     #
 
@@ -200,6 +205,25 @@ Sets data for the requested attribute.
     #
 
     @staticmethod
+    def _db_cleanup():
+        """
+Cleans up old KeyStore entries from database.
+
+:since: v1.0.0
+        """
+
+        with Connection.get_instance() as connection:
+            validity_ended_condition = and_(_DbKeyStore.validity_end_time > 0,
+                                            _DbKeyStore.validity_end_time < int(time())
+                                           )
+
+            if (connection.query(_DbKeyStore).filter(validity_ended_condition).delete() > 0):
+                connection.optimize_random(_DbKeyStore)
+            #
+        #
+    #
+
+    @staticmethod
     def _load(cls, db_instance):
         """
 Load KeyStore entry from database.
@@ -214,15 +238,7 @@ Load KeyStore entry from database.
         _return = None
 
         with Connection.get_instance() as connection:
-            if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1):
-                validity_ended_condition = and_(_DbKeyStore.validity_end_time > 0,
-                                                _DbKeyStore.validity_end_time < int(time())
-                                               )
-
-                if (connection.query(_DbKeyStore).filter(validity_ended_condition).delete() > 0):
-                    connection.optimize_random(_DbKeyStore)
-                #
-            #
+            if ((not Settings.get("pas_database_auto_maintenance", False)) and randrange(0, 3) < 1): cls._db_cleanup()
 
             if (db_instance is not None):
                 Instance._ensure_db_class(cls, db_instance)
