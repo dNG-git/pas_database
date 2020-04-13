@@ -45,6 +45,11 @@ Tool to work with the configured database and its tables.
 
     # pylint: disable=unused-argument
 
+    SUPPORTED_COMMANDS = [ "applySchema" ]
+    """
+List of commands supported for this application
+    """
+
     __slots__ = [ "_cli_setup" ]
     """
 python.org: __slots__ reserves space for the declared variables and prevents
@@ -68,7 +73,7 @@ True if this tool should handle the initial configuration.
         """
 
         self.arg_parser = ArgumentParser()
-        self.arg_parser.add_argument("--applySchema", action = "store_true", dest = "apply_schema")
+        self.arg_parser.add_argument("command", choices = Application.SUPPORTED_COMMANDS)
         self.arg_parser.add_argument("-s", action = "store_true", dest = "cli_setup")
 
         InteractiveCli.register_run_callback(self._on_run)
@@ -110,8 +115,6 @@ Callback for execution.
 :since: v1.0.0
         """
 
-        # pylint: disable=attribute-defined-outside-init
-
         Settings.read_file("{0}/settings/core.json".format(Settings.get("path_data")), True)
         Settings.read_file("{0}/settings/pas_database.json".format(Settings.get("path_data")), True)
 
@@ -126,7 +129,7 @@ Callback for execution.
 
         Hook.load("database")
 
-        if (args.apply_schema): self.run_apply_schema(args)
+        if (args.command == "applySchema"): self.run_apply_schema(args)
     #
 
     def _on_shutdown(self):
