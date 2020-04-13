@@ -12,7 +12,7 @@
 
     # Database URL given to SQLAlchemy.
     # http: //docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine
-    # "pas_database_url": "sqlite:///data/db.sqlite3"
+    # "pas_database_url": "sqlite:///__path_base__/data/db.sqlite3"
 
     # Deactivate native nested transactions if false. This is required for
     # SQLite databases.
